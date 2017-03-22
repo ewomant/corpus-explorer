@@ -1,0 +1,66 @@
+
+###constraints
+
+#set($currentQuery = $params.getParams('q'))
+
+#if($selected_filter_queries.size() > 0 || ($currentQuery.size() > 0 &&  $currentQuery[0] != ''))
+<div class="constraints" #annTitle("Anfragen und Filter aufz&auml;hlen.  Klicken um zu entfernen")>
+    <div class="qfqs">   <h2 >Aktuelle Auswahl:</h2>
+
+        #if($currentQuery.size() > 0 &&  $currentQuery[0] != '')
+            <a style="{text-decoration: line-through;}"
+               href="#lensNoQ">Anfrage:$currentQuery[0]</a>&nbsp;
+        #end
+
+            #foreach($field in $sort.sort($selected_filter_queries.keySet()))
+                #set($filter = $selected_filter_queries[$field])
+                #if(($velocityCount - $selected_topicfilters.size()) != 1)|#end##
+
+                #if($filter.type == "predefined" || $filter.type == "junkfilter")
+                    <a href="#url_for_filters_no_current($filter['field'])">$filter['field_name']</a>
+                #else
+                    <a href="#url_for_filters_no_current($field)">$filter['field_name']</a>
+                #end
+
+            #end
+
+    </div>
+#end
+
+
+#set($currenttopic_filtered = false)
+#set($topicfilternames = [])
+#set($topicfiltertopics = [])
+#if($selected_topicfilters.size() > 0)
+
+    <div class="topicfilters" id="topicfilter-box">
+        <h2>
+            <img src="#{url_for_solr}/admin/file?file=/velocity/img/filter_icon.png&contentType=image/png" alt="Topicfilter" title="topicfilter"/>Aktive Topicfilter:</h2>
+        <ul>
+            #foreach($topic_filter in $selected_topicfilters)
+                #set($fq = $topic_filter.fq)
+                #set($selection = $fq.split(":"))
+                #set($selection[0] = $selection[0].trim())
+                #set($topicfiltername = "#displaytopicname($selection[0])")
+                #set($topicfiltername = $topicfiltername.trim())
+                #set($success = $topicfilternames.add($topicfiltername))
+                #set($success = $topicfiltertopics.add($selection[0]))
+
+                #if($curr_topic_short && $curr_topic_short == $selection[0])#set($curr_selecetedtopic_filtered = true)#end
+                <li>
+                    <a href="#{url_no_curfq}($esc.url($fq))">#displaytopicmodelname($selection[0]): $topicfiltername</a>:
+                    <form class="filterbytopic" action="#{url_no_curfq}($esc.url($fq))" method="get">
+                        <input type="text" size="2" value="#{filterFrom}($selection[1])" min="0" max="99" class="filterbytopicpercent" name="filterbytopicpercent">%
+                        <input type="hidden" value="$esc.url($selection[0])" class="filterbytopictopic">
+
+                        <input  type="submit" class="filterSubmit" value="&Auml;ndern"/>
+                    </form>
+                </li>
+            #end
+        </ul>
+    </div>
+#end
+</div>
+
+
+

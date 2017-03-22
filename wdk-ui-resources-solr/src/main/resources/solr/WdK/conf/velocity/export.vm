@@ -1,0 +1,52 @@
+#set($addsortfield = "")
+#if($ct)
+		#set($addsortfield = ",$curr_topic_short")
+#end
+
+#if($curr_sort_short)
+		#set($addsortfield = ",$curr_sort_short")
+#end
+
+<div class="exportresults">
+
+<form  class="pure-form" action="#{url_for_solr}/browse" target="_blank" method="get">
+
+    #foreach($fq in $request.params.getParams('fq'))
+      #if ($fq != "{!bbox}")
+        <input type="hidden" name="fq" id="allFQs" value="$esc.html($fq)"/>
+      #end
+    #end
+		<input type="hidden" name="wt" value="csv"/>
+     #if($response_grouped_document)
+      	 <input type="hidden" name="group.main" value="true"/>
+		  <input type="hidden" name="fl" value="${groupfield},${bookfield},${booktitlefield},${authornamefield},$publisherfield,${publicationplacefield},${timefacet}${addsortfield}"/>
+	  #else
+		 ##<input type="hidden" name="fl" value="id,$bookfield,$booktitlefield,goobi_Author.displayName,goobi_PublicationYear,page,text${addsortfield}"/>
+          <input type="hidden" name="fl" value="id,${groupfield},${bookfield},${booktitlefield},${authornamefield},${timefacet}${addsortfield},${pagefield},text"/>
+
+     #end
+    #q_form()
+	#*filter accidental "big" documents
+	 <input type="hidden" name="fq" id="allFQs" value="ntokens:[50 TO 2500]"/>*#
+
+	#additional_params_form_nops(['rows','fl' ])
+
+	<fieldset>
+
+
+			<img alt="CSV-Datei" src="#{url_for_solr}/admin/file?file=/velocity/img/csv.png&contentType=image/png"/>
+			Exportieren:
+			<input type="number" min="0" max="$current_page_results_found" name="rows" value="#if($current_page_results_found > 1000)1000#{else}$current_page_results_found#{end}"/>
+				von $current_page_results_found Ergebnissen - Start bei: <input type="number"  name="start" value="0" class="twodigitnumberfield"/>
+			<button class="pure-button" type="submit">&Ouml;ffnen</button>
+
+    </fieldset>
+	#*<span style="text-align:right;font-size:small;">&ldquo;Riesendokumente&rdquo; werden gefiltert (mehr als 5000 Terme).</span>*#
+
+
+</form>
+#if(!$response_grouped_document)
+        <a target="_blank" href="#{url_for_solr}/browse#{lens_without_P}(['rows', 'fl'])&wt=csv&fl=id,${groupfield},${bookfield},${booktitlefield},${authornamefield},${pagefield},${timefacet}${addsortfield},${textexport}&rows=$current_page_results_found">Normalisierte Texte aller aktuellen Treffer</a>
+
+#end
+</div>

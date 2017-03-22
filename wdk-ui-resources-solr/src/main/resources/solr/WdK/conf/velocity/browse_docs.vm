@@ -1,0 +1,79 @@
+#**
+ *  Main entry point into the /browse templates
+ *#
+
+
+
+#set($searcher = $request.searcher)
+#set($params = $request.params)
+#set($clusters = $response.response.clusters)
+#set($mltResults = $response.response.get("moreLikeThis"))
+#set($annotate = $params.get("annotateBrowse"))
+
+#parse('config.vm')
+#parse('topics.vm')
+#parse('calc_params.vm')
+
+#set($bookonly = false)
+<div id="browse_docs">
+#set($mltOn = $params.getBool('mlt'))
+
+#if($mltOn == true)
+    <h2>&Auml;nliche Dokumente zu folgendem Trefferdokument</h2>
+    #set($pagetitle = "WdK-SimDocs: Ähnliche Dokumente für Anfragedokument: ")
+#else
+    <h2>Dokumente f&uuml;r Auswahl</h2>
+    #set($pagetitle = "WdK-Pages: ")
+#end
+
+
+
+#parse('constraints.vm')
+
+#if($bookonly && $response.results.size() > 0)
+  	#set($render = "bookonly" )
+  	#set($doc = $response.results[0])
+  	#parse("page_doc.vm")
+  	#set($render = "page" )
+#end
+
+ #if($curr_sort_short)
+   <p><em>Sortiert nach:</em>
+     #if($mltOn == true)&Auml;hnlichkeit zu Dokument
+   	#elseif($curr_topic_short)
+   		#displaytopicname($curr_sort_short)
+   	#else
+   		#displayfacetname($curr_sort_short)
+   	#end
+   	</p>
+   #else
+   <p><em>Sortiert nach:</em> Relevanz zur Anfrage</p>
+   #end
+
+
+#if($mltOn != true)
+<div class="pagination">
+  #parse("pagination_top.vm")
+</div>
+#end
+
+## Show Error Message, if any
+<div class="error">
+  #parse("error.vm")
+</div>
+
+
+## Render Results, actual matching docs
+<div class="results">
+  #parse("results_list.vm")
+</div>
+
+
+<div class="pagination_bottom">
+  #parse("pagination_top.vm")
+#if($mltOn != true)
+      #parse("export.vm")
+    #end
+</div>
+</div>
+

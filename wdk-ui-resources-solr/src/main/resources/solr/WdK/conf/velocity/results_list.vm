@@ -1,0 +1,30 @@
+#**
+ *  Render the main Results List
+ *#
+
+## Usually displayed inside <div class="results">
+
+#if($response_grouped_document)
+
+    #parse("hit_grouped.vm")
+
+#else
+
+
+  #set($countdocs =  $current_page_start+1)
+
+    #foreach($doc in $response.results)
+
+
+         #parse("hit.vm")
+         #set($countdocs = $countdocs+ 1)
+
+
+         #set($mltOn = $params.getBool('mlt'))
+        #if($mltOn == true)
+            #parse("mlt_results_list.vm")
+      #end
+    #end
+  #end
+
+

@@ -1,0 +1,69 @@
+#**
+ *  Main entry point into the /browse templates
+ *#
+
+
+##set($xml_reader = $xml.read('xml_docs/foo.xml'))
+
+#set($searcher = $request.searcher)
+#set($params = $request.params)
+#set($clusters = $response.response.clusters)
+#set($mltResults = $response.response.get("moreLikeThis"))
+#set($annotate = $params.get("annotateBrowse"))
+#set($rpmfq = $params.getParams('fq'))
+
+#parse('config.vm')
+#parse('topics.vm')
+#parse('calc_params.vm')
+
+
+
+<div class="navigators" id="top">
+  #parse("header.vm")
+  #parse("facets.vm")
+</div>
+
+#set($pagetitle = "WdK-Browse: ")
+
+#parse('query_form.vm')
+
+
+#parse('chart.vm')
+
+
+<div id="tabs">
+      #parse("tabs.vm")
+</div>
+<div class="pagination">
+  #parse("pagination_top.vm")
+</div>
+
+<div class="sort">
+    #parse("sort.vm")
+</div>
+
+
+
+
+## Show Error Message, if any
+<div class="error">
+  #parse("error.vm")
+</div>
+
+
+
+## Render Results, actual matching docs
+<div class="results">
+  #parse("results_list.vm")
+</div>
+
+<div class="pagination_bottom">
+  #parse("pagination_top.vm")
+  #parse("export.vm")
+</div>
+
+
+#parse("topic_selector.vm")
+
+
+

@@ -1,0 +1,525 @@
+
+##todo: form, switch topic/percent, mark topic with colour
+#set($searcher = $request.searcher)
+#set($params = $request.params)
+#set($clusters = $response.response.clusters)
+#set($mltResults = $response.response.get("moreLikeThis"))
+#set($annotate = $params.get("annotateBrowse"))
+
+
+
+#parse('config.vm')
+#set($success = $additional_params.addAll($additional_params_stats))
+#parse('topics.vm')
+#parse('calc_params.vm')
+
+
+
+##select topicmodel, select facet
+##create json string simultaniously? Visualization?
+
+#set($String = "abc")
+
+
+#set($facet_pivot_1= $params.get('facet_pivot_1'))
+#set($facet_pivot_2= $params.get('facet_pivot_2'))
+#set($rel_values = false)
+#if( $params.get('rel_values').equals("on"))
+    #set($rel_values = true)
+#end
+
+
+#if($params.get('top_entries_max'))
+
+    #set($top_entries_max = $number.toNumber($params.get('top_entries_max')))
+#else
+    #set($top_entries_max = 3)
+
+#end
+
+
+
+#set($range_pivot = false)
+#if($facet_pivot_1.equals($timefacet_grouped))
+    #set($range_pivot = true)
+    #set($facet_pivot_1 = $timefacet)
+#end
+
+
+
+
+
+#set($params_without = ['sort', 'ct', 'rows', 'hl.q', 'v.template'])
+#set($success = $params_without.addAll($additional_params_stats) )
+#set($lens = "#lens_without_P_tagged($params_without)")
+
+##TODO: Link auf filter + ggf. ct & sort
+#set($base_url = "#{url_for_solr}/browse$lens")
+##set($base_url = "$base_url&hl.q=$esc.url($params.get('q'))")
+
+<div class="header_stats">
+   #parse('header.vm')
+    <div class="header_stats_results">
+
+
+        <a href="$base_url"><em>$current_page_results_found</em> Ergebnisse</a>
+
+
+    </div>
+    #parse('constraints.vm')
+
+
+</div>
+
+
+#parse('stats_categories_form.vm')
+
+
+
+<div id="statsview">
+
+
+
+#if($facet_pivot_1 && $facet_pivot_2)
+
+
+
+
+
+    ##if facet1 = Erscheinungsjahr, offer option to display and change links
+
+    #set($compare_query = true)
+
+#set($pivots = $response.response.facet_counts.facet_pivot)
+
+##if statson, statsonquery statsonquery
+
+
+#set($orderedfacetkeys = [])##columnkeys
+#set($orderedfacetcounts = {})##rowtotals
+#set($entries = {}) ##columntotals
+#set($allsubentries = {})
+#set($orderedsubfacetkeys = [])##rowkeys
+#set($orderedsubfacetcounts = {})##rowtotals
+#set($orderedsubfacetstats1 = {})
+
+
+##parse the other way around... $facet_pivot_1 comes first, while
+#if($range_pivot)
+
+    #foreach ($pivot in $pivots)
+        #foreach ($entry in  $pivot.value)
+            #if($entry.value)
+                #set($entry_value = $entry.value)
+            #else
+                #set($entry_value = $missing_value)
+            #end
+            #set($facet_pivot_2 = $entry.field)
+            #set($added = $orderedsubfacetkeys.add($entry_value))
+            #set($orderedsubfacetcounts[$entry_value] =$entry.count)
+
+
+
+            #if($entry.ranges)
+                #set($counts = $entry.ranges[$facet_pivot_1 ].counts)
+                #foreach($count in $counts)
+                ##set($added = $orderedfacetkeys.add($count.value))
+                    #set($startyear = $math.toInteger($count.toString().substring(0,4)))
+                    #set($endyear = "#range_get_to_value_year($startyear, $entry.ranges[$facet_pivot_1 ].gap)")
+                   ## "[" + $startyear + " TO " + $endyear + "]")
+                    #set($rangekey  = "[" + $startyear + " TO " + $endyear + "]")
+
+                    #if($count.value > 0)
+
+                        #if( ! $orderedfacetcounts[$rangekey])
+                            #set($added = $orderedfacetkeys.add($rangekey))
+                            #set($orderedfacetcounts[$rangekey] = $response.response.facet_counts.facet_ranges[$facet_pivot_1].counts[$startyear.toString()])
+
+                            #set($allsubentries[$rangekey] = {})
+                        #end
+                        #set($newentry = {'field':$facet_pivot_2 , 'value': $rangekey, 'count': $count.value, "range": true })
+                        ##set($entries[$rangekey] = )
+                        #set($allsubentries[$rangekey][$entry_value] = $newentry)
+
+
+                    #end
+
+                #end
+
+            #end
+
+        #end
+        #end
+
+#else ##parse
+    ##kein range pivot##alternative: facetten für iterieren verwenden und damit pivot-entries abfragen? Would avoid 0 errors
+    #foreach ($pivot in $pivots)
+
+        #foreach ($entry in $pivot.value)
+
+            #set($entry_value = "")
+            #set($entry_value =   $entry.value.toString())
+            #if(!$entry_value  || $entry_value == "")
+                #set($entry_value = $missing_value)
+            #end
+
+            #if( $response.response.facet_counts.facet_fields[$entry.field][$entry_value])
+                #set($added = $orderedfacetkeys.add($entry_value))
+                #set($orderedfacetcounts[$entry_value] = $entry.count)
+
+            ## <br/> <br/>entry.value '$entry.value' <br/>
+                #set($entries[$entry_value] = $entry)
+            ##entry als facet vorhanden?
+
+                #set($subentries = {})
+                #foreach($subentry in $entry.pivot)
+                    #set($subentry_value = "")
+                    #set($subentry_value =   $subentry.value.toString())
+                    #if(!$subentry_value  || $subentry_value == "")
+                        #set($subentry_value = $missing_value)
+                    #end
+                ##Subentry value '$subentry_value' <br/>
+
+                    ##only save entries for which a facet value exists
+                    #if($response.response.facet_counts.facet_fields[$subentry.field][$subentry_value]) ##Ja:
+                        #if( $!orderedsubfacetcounts[$subentry_value])
+                        #else
+                            #set($added = $orderedsubfacetkeys.add($subentry_value))
+                            #set($orderedsubfacetcounts[$subentry_value] =  $response.response.facet_counts.facet_fields[$subentry.field][$subentry_value])
+                        #end
+                        #set($subentries[$subentry_value] = $subentry )
+                    #else
+                       ## <br/>Subentry $subentry_value nicht als facette vorhanden <br/>
+                    #end
+
+                #end
+
+                #set($allsubentries[$entry_value] = $subentries)
+
+            #else
+               ## <br/> Entry $entry_value in $entry.field nicht als Facette vorhanden
+              ##  $response.response.facet_counts.facet_fields[$entry.field]<br/>
+            #end
+
+        #end
+    #end
+
+#end
+
+        <h1>#if($rel_values)Relative#end
+            H&auml;ufigkeiten f&uuml;r
+            <em>#displayfacetname($facet_pivot_2)</em> im Vergleich &uuml;ber
+            <em>
+                #if($timefacet.equals($facet_pivot_1) && $range_pivot)
+                    #displayfacetname($timefacet_grouped )
+                #else
+                    #displayfacetname($facet_pivot_1)
+                #end</em></h1>
+
+        #set($pagetitle = "WdK-Vergleich: Anzahl in Kategorie: #displayfacetname($facet_pivot_2) nach #displayfacetname($facet_pivot_1 )")
+
+         #set($current_statsview_url = "#{url_for_home}#{lens_without_P}(['absvalues'])#{add_params}(['facet.pivot', 'facet_pivot_1','facet_pivot_2', 'v.template', 'facet.range', 'range_pivot'])")
+
+
+##for dates order by facetkey
+#if($facet_pivot_1  == $timefacet || $facet_pivot_1 == $timefacet_grouped)
+    #set($orderedfacetkeys =  $sort.sort( $orderedfacetkeys))
+#elseif($facet_pivot_2 == $timefacet)
+    #set($orderedsubfacetkeys =  $sort.sort( $orderedsubfacetkeys))
+#end
+
+
+
+##calculate relative metrics between groups
+##<ul>
+
+    #set($numberOfCells = $orderedsubfacetkeys.size() * $orderedfacetkeys.size())
+    #set($pvalue = 0.0001)
+    #set($pvalue_ajdusted = $assoc.adjustAlpha($pvalue,$numberOfCells))
+    #set($llhr_significance_treshold = $assoc.getChiSigLevel($pvalue))
+    #set($llhr_significance_treshold_adjusted = $assoc.getChiSigLevel($pvalue_ajdusted ))
+
+#foreach($entry_value in $allsubentries.keySet())
+
+
+    ## <li> $entry_value:  $orderedfacetcounts[$entry_value ]
+        #foreach($subentry_value in $allsubentries[$entry_value].keySet())
+            #set($subentry = "")
+            #set($relative_count = "")
+            #set($relative_count_row = "")
+            #set($relative_to_group_points = "")
+            #set($relative_to_group = "")
+            #set($llhr = "")
+            #set($significant = "")
+            #set($significantAdjusted = "")
+            #set($subentry_link = "")
+            #set($subentry_name = "")
+
+
+            ## <li>
+            #set($subentry = $allsubentries[$entry_value][$subentry_value])
+
+
+            #set($relative_count = $math.div($subentry.count, $orderedfacetcounts[$entry_value ]))
+
+            #set($relative_count_row = $math.div($orderedsubfacetcounts[$subentry_value], $current_page_results_found))
+
+            #set($relative_to_group_points = $math.sub( $relative_count, $relative_count_row))
+
+            #if($relative_count_row > 0)
+                #set($relative_to_group = $math.div( $relative_count, $relative_count_row))
+            #else
+                #set($relative_to_group = 0)
+            #end
+
+
+            #set($llhr = $assoc.logLikelihoodRatioEvents($subentry.count, $orderedfacetcounts[$entry_value], $orderedsubfacetcounts[$subentry_value], $current_page_results_found))
+
+            #set($significant = ($llhr > $llhr_significance_treshold))
+
+            #set($significantAdjusted = ($llhr > $llhr_significance_treshold_adjusted))
+
+
+            #if($subentry.range)
+                #set($subentry_link = "$base_url&fq=#{createFQ_noQ}($facet_pivot_1, $entry_value)&fq=#{createFQ}($subentry.field, $subentry_value)")
+
+            #else
+                #set($subentry_link = "$base_url&fq=#{createFQ}($facet_pivot_1, $entry_value)&fq=#{createFQ}($subentry.field, $subentry_value)")
+                #set($subentry_name = $subentry_value)
+            #end
+
+
+            #set($newentry = {'field':$subentry.field ,
+                'value': $subentry_value,
+                'count': $subentry.count ,
+                'relative_count': $relative_count,
+                'relative_count_row': $relative_count_row,
+                'relative_to_group_points': $relative_to_group_points,
+                'relative_to_group': $relative_to_group,
+                'llhr': $llhr,
+                'significant': $significant,
+                'significantAdjusted': $significantAdjusted,
+                'link': $subentry_link })
+
+            #set($allsubentries[$entry_value][$subentry_value] = $newentry)
+            #if(! $allsubentries[$entry_value][$subentry_value]['value'] )
+                <p>Alert! no $allsubentries[$entry_value][$subentry_value]['value'] for $subentry_value</p>
+            #end
+           ## </ul>
+            #end
+        ##</li></ul></li>
+    #end
+
+##</ul>
+
+
+
+
+<a href="" class="statssortreset">Sortierung zur&uuml;cksetzen</a>
+
+<table id="statsviewtable">
+
+	<thead>
+    <tr>##titlerow, no sorting
+        <th class="sorter-false" style="text-align:right" colspan="2">#displayfacetname($facet_pivot_1)</th>
+
+        <th class="rowtotal sorter-false " colspan="2">Gesamt</th>
+
+        #foreach($facet_value in $orderedfacetkeys)
+            <th class="sorter-false"  #if($compare_query) colspan="2"#end>#displayfacetrange($facet_value)</th>
+        #end
+
+        <th class="topicname sorter-false">
+        </th>
+    </tr>
+
+		<tr>
+			<th class="columnSelector-disable">#</th>
+			<th class="topicname {'sorter: text'} columnSelector-disable">#displayfacetname($facet_pivot_2)
+			</th>
+
+			<th class="rowtotal columnSelector-disable">Anzahl</th>
+            <th class="rowtotal columnSelector-disable">Anteil</th>
+
+		#foreach($facet_value in $orderedfacetkeys)
+		<th title="$facet_value"> #if(!$rel_values)Anzahl#{else}Anteil#end</th>
+            #if($compare_query)
+                <th class="compare_query" title="+/- $facet_value">+/-</th>
+            #end
+	  	#end
+            <th class="topicname sorter-text">#displayfacetname($facet_pivot_2)
+            </th>
+  	 </tr>
+    </thead>
+<tbody class="avoid-sort">
+
+
+    #####top values per group
+    #if($top_entries_max > 0)
+
+
+
+
+    <tr class="top_categories top_categories_desc"> <th colspan="4" class="count">Top-${top_entries_max}-Aufsteiger (nur **):</th>
+    ## <li> $entry_value:  $orderedfacetcounts[$entry_value ]
+        #foreach($entry_value in $orderedfacetkeys)
+            #set($counter = 1)
+
+            <td  class="sorter-false" colspan="2"><ol>
+                #foreach($subentry in $sort.sort($allsubentries[$entry_value], 'relative_to_group_points:desc'))
+                    #if($counter <= $top_entries_max && $subentry.relative_to_group_points > 0 && $subentry.significantAdjusted)
+                        <li>$display.truncate($subentry.value,35, "..", true):  #formatp_sign($subentry.relative_to_group_points)</li>
+                        #set($counter = $counter + 1)
+                    #end
+                #end
+            </ol></td>
+
+        #end
+        <th></th></tr>
+
+    <tr class="top_categories top_categories_asc">
+        <th colspan="4" class="count sorter-false" >Top-${top_entries_max}-Absteiger (nur **):</th>
+        #foreach($entry_value in $orderedfacetkeys)
+        #set($counter = 1)
+        <td  class="sorter-false" colspan="2"><ol>
+            #foreach($subentry in $sort.sort($allsubentries[$entry_value], 'relative_to_group_points:asc'))
+                #if($counter <= $top_entries_max &&  $subentry.relative_to_group_points < 0 && $subentry.significantAdjusted)
+                    <li>$display.truncate($subentry.value,35, "..", true): #formatp_sign($subentry.relative_to_group_points)</li>
+                    #set($counter = $counter + 1)
+                #end
+            #end
+            </ol>
+        </td>
+
+    #end<th></th></tr>
+    #end
+
+    <tr>
+        <th></th>
+        <th class="count">Seitenzahl pro #displayfacetname($facet_pivot_1):</th>
+        <th class="count">$current_page_results_found</th>
+        <th class="rowtotal"></th>
+
+
+        #foreach($key in $orderedfacetkeys)
+
+            <th class="sorter-percent  count" title="$key">$orderedfacetcounts[$key]</th>
+            #if($compare_query)
+
+                #set($relative_count_column = $math.div($orderedfacetcounts[$key], $current_page_results_found))
+                <th class="sorter-percent count columnSelector-disable">#formatp($relative_count_column)</th>
+            #end
+        #end
+        <th></th>
+
+    </tr>
+
+
+    </tbody>
+  	 <tbody>
+
+         #foreach($subfacetkey in $orderedsubfacetkeys )
+
+     <tr>
+         <td>$foreach.count</td>
+	    <td class="topicname"><a target="_blank" href="$base_url#{createFQ}($facet_pivot_2,$subfacetkey)">#displayfacetname($subfacetkey)</a></td>
+
+            #set($rowvalue=0)
+			#set($rowvalue = $math.div($orderedsubfacetcounts[$subfacetkey], $current_page_results_found))
+
+                <td class="topicpercent rowtotal">
+                    <a target="_blank" href="$base_url#{createFQ}($facet_pivot_2,$subfacetkey)"> $orderedsubfacetcounts[$subfacetkey]</a>
+                </td>
+
+                <td class="rowtotal">
+                    #formatp($rowvalue)
+                </td>
+
+
+
+			#foreach($key in $orderedfacetkeys)
+
+                #set($subentry_titletext_comp = "")
+                #set($subentry_titletext_abs = "")
+                #set($subentry_titletext_rel = "")
+                #set($subentry = "")
+				#set($subentry = $allsubentries[$key][$subfacetkey])
+
+
+
+				#if(!$subentry || $subentry == "")##todo berechnen auch für 0?
+                    #set($relative_to_group = "")
+                    #if($rowvalue > 0)
+                        #set($relative_to_group = 0)##empty value if none in row (=uninteresting 0)
+                    #end
+                    #set($subentry = {"count": 0,
+                        "link": "#",
+                        'relative_to_group': $relative_to_group,
+                        'relative_to_group_points': $math.sub(0, $rowvalue) ,
+                        "relative_count": 0.0})
+                #end
+
+                    #set($subentry_titletext_abs = "<em>$subentry.count</em> in <em>#displayfacetname($subfacetkey)</em> und <em>#{displayfacetname}($key)</em><br/>#formatp($subentry.relative_count) von  insgesamt $orderedfacetcounts[$key] in #displayfacetname($key)")
+
+                #set($subentry_titletext_rel = "<em>#formatp($subentry.relative_count)</em> ($subentry.count) in <em>#displayfacetname($subfacetkey)</em> <br/>von insgesamt $orderedfacetcounts[$key] in <em>#displayfacetname($key)</em>")
+
+                #if($subentry.relative_to_group_points <=0)#set($comparison = "niedriger" )#else #set($comparison = "höher" )#end
+
+                #set($subentry_titletext_comp = "Anteil für <em>#displayfacetname($subfacetkey)</em> in in <em>#displayfacetname($key)</em>  ist <br/> <em> #formatp_sign($subentry.relative_to_group_points)</em> Prozentpunkte $comparison (#formatp($subentry.relative_count), $subentry.count)")
+
+                #set($subentry_titletext_comp = "$subentry_titletext_comp als in allen Treffern (#formatp($rowvalue), $orderedfacetcounts[$key])</em>, Loglikelihood=$subentry.llhr")
+
+
+                #if(!$rel_values)
+                            <td class="topicpercent values1" title='$esc.html($subentry_titletext_abs)'>
+                                <a   href="$subentry.link" target="_blank">
+                                $subentry.count</a>
+                            </td>
+                        #else
+                            <td class="topicpercent values1" title='$esc.html($subentry_titletext_rel)'>
+                                <a href="$subentry.link" target="_blank">
+                                    #formatp($subentry.relative_count)</a>
+                            </td>
+
+                   #end
+
+                    #if($compare_query)
+                           ###set($association_strength = $math.div($subentry.count, $math.mul($orderedfacetcounts[$key], $rowvalue)))
+                           ###set($jaccard = $math.div($subentry.count, $math.sub($orderedfacetcounts[$key], $math.add($rowvalue, $subentry.count))))
+
+                        <td  class="compare_query" title="$esc.html($subentry_titletext_comp)">
+                            <a href="$subentry.link" target="_blank">
+                        #formatp_sign($subentry.relative_to_group_points)#if($subentry.significant)*#end#if($subentry.significantAdjusted)*#end
+
+                            </a>
+                        </td>
+                    #end
+
+			 #end
+         <td class="topicname"><a target="_blank" href="$base_url#{createFQ}($facet_pivot_2,$subfacetkey)">#displayfacetname($subfacetkey)</a></td>
+
+	 </tr>
+  	#end
+	</tbody>
+ </table>
+<div> <a href="" class="selecttable">Tabelle ausw&auml;hlen</a> </div>
+
+    #*
+     #set($pvalue_ajdusted = $assoc.adjustAlpha($pvalue))
+    #set($llhr_significance_treshold = $assoc.getChiSigLevel($pvalue))
+    #set($llhr_significance_treshold_adjusted = $assoc.getChiSigLevel($pvalue_ajdusted ))
+#*
+     *#
+    #set($formatString = '#0.##########' )
+<p>* Signifikanz f&uuml;r p=$number.format($formatString, $pvalue) der Assoziation zwischen den Kategorien (beidseitig) nach <a href="http://tdunning.blogspot.de/2008/03/surprise-and-coincidence.html">Log-Likelihood-Ratio</a> - Log-Likelihood-Ratio > $number.format($llhr_significance_treshold)</p>
+<p>** Signifikanz f&uuml; p=$number.format($formatString, $pvalue_ajdusted) (Angepasst an Anzahl der in der Tabelle getroffenen Vergleiche durch Sidak-Correction - siehe <a href="http://wordhoard.northwestern.edu/userman/analysis-comparewords.html#loglike">WordHHoard User Manual</a>). Log-Likelihood-Ratio > $number.format($llhr_significance_treshold_adjusted)</p>
+
+#else
+    Kategorien ausw&auml;hlen, um Vergleich zu berechnen.
+        #set($pagetitle = "WdK-Vergleich nach Kategorien")
+
+#end
+
+
+</div>
+

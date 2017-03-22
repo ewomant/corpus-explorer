@@ -1,0 +1,26 @@
+#set($lenswithoutstatsonquery_url = "#lens_without_P(['statsonquery', 'sort', 'fl', 'q', 'ct'])")
+#set($statsonquery = $params.get('statsonquery'))
+
+
+#set($queryforstats_q=$params.get('q'))
+#set($queryforstats_func = "{!func}max(query({!edismax+v='$esc.url($queryforstats_q)'},0),0)")
+#set($statsonquery_url =  "#{url_for_home}$lenswithoutstatsonquery_url&statsonquery=$esc.url($queryforstats_q)&sort=$queryforstats_func+desc&fl=*,$queryforstats_func")
+
+##currently deactiveted, update diagram to include query-stats
+#if(false && $params.get('q') && $params.get('q') != "" && ! $statsonquery)
+
+		
+
+		
+		##$statsonquery_url
+		<a href="$statsonquery_url">Relevanzdiagramm f&uuml;r Anfrage $queryforstats_q</a>
+		
+	##alternative: aktuelle url, weiterer input-button fuer form	
+#end
+
+#if($statsonquery)
+
+Aktuelle Statistiken f&uuml;r Anfrage: <em>$statsonquery</em>
+#set($nostatsonquery_url =  "#{url_for_home}$lenswithoutstatsonquery_url&q=$esc.url($statsonquery)")
+(<a href="$nostatsonquery_url">Abbrechen</a>)
+#end

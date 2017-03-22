@@ -1,0 +1,180 @@
+
+#set($current_page_results_per_page = $page.results_per_page)
+
+#if($response.responseHeader.params.start)
+	#set($current_page_start = $number.toNumber($response.responseHeader.params.start)) ## replace $page.start
+#else
+	#set($current_page_start = 0)
+#end
+
+
+#if($response.response.get('grouped').get("document"))
+	#set($response_grouped_document = $response.response.get('grouped').get("document"))
+	#set($num_bookpages =  $response_grouped_document.matches)
+	#set($current_page_results_found =  $response_grouped_document.ngroups)
+#else
+  #set($num_bookpages =  $page.results_found)
+  #set( $current_page_results_found =   $page.results_found)
+#end
+
+#set($current_page_page_count = $current_page_results_found / $current_page_results_per_page) ##$current_page_page_count
+
+#if($current_page_results_found % $current_page_results_per_page > 0)
+	#set($current_page_page_count = $current_page_page_count +1)
+#end
+#if($current_page_start && $current_page_start > 0)
+ #set($current_page_page_number = ($current_page_start / $current_page_results_per_page)+1)
+
+#else
+	#set($current_page_page_number = 1)
+#end
+
+#set( $curr_sort = $request.params.get('sort') )
+#set( $curr_sort_short = $curr_sort.replace(" desc", "").replace(" asc", ""))
+
+#if($curr_sort.endsWith("desc"))
+	#set( $curr_sort_dir = "desc")
+#elseif($curr_sort.endsWith("asc"))
+	#set( $curr_sort_dir = "asc")
+#end
+
+#set($selected_filter_queries = {})
+#set($selected_topicfilters = {})
+
+##alternative: save object with attributes: is_range_filter, is_topic_range_filter, is_topic_filter
+
+
+#if($params.getParams('fq'))
+##parse different fields in one fq, add values to correct field
+    #foreach($fq_string in $params.getParams('fq'))
+        #set($previous_fq_count=$velocityCount - 1)
+        #set($filter_name = "")
+        #set($field = "")
+        #set($field_id = "")
+        #set($value = "")
+        #set($selection = "")
+        #set($type = "")
+        #set($filter = {})##make it an array of filters? To store arbitrary type-value combinations. E.g it would be possible to put a range filter and a value filter on the same field
+
+        ##todo: type = range (to display without quotes)
+        ##todo: type = junkfilter
+        #if($fq_string != '')
+            #set($fq_string="#removeTag($fq_string)")
+
+            #set($selection = $fq_string.split(":",2))
+            #set($field = $selection[0].trim())
+
+            #set($value = $selection[1].trim())
+
+            #if($facet_query_names[$fq_string.trim()] ||  $facet_query_names["-$fq_string.trim()"] )##fuer predefined filter-queries - bleibt, wenn nicht vorhandenpredefined filter-queries - bleibt, wenn nicht vorhanden
+
+                ##set($field = $fq_string.trim())
+                ##set($field = "#removeEx($fq_string.trim())")
+
+                #set($type = "predefined")
+
+                #if($junkfilter[$fq_string.trim()])
+                    #set($type = "junkfilter")##do not tag
+                #end
+
+                #set($value = $fq_string)
+                #set($field_id = $fq_string.trim())
+                #set($filter_name = $esc.html($facet_query_names[$fq_string]))
+
+
+                #addFieldSelection($field_id, $field,$filter_name, $fq_string, $type, $value)
+
+            ##range facets
+            #elseif(($value.startsWith("[") || $value.startsWith("{")) && ($value.endsWith("]") || $value.endsWith("}") )&& $value.contains("TO") && ! $value.contains($missing_value_range) )
+
+                #set($type = 'range')
+
+                #set($field_id = $field.trim())
+
+                #set($filter_name = "#displayfacetname($field)")
+                #set($filter_name = "<i>$filter_name.trim()</i> : " + ($esc.html($value)))
+
+                #addFieldSelection($field_id, $field,$filter_name, $fq_string, $type, $value)
+
+
+            ##facet fields - always assume multivalued
+            #elseif($fq_string.contains(":"))
+                ##fq split an : , dann displayfacetname und zusammensetzen
+                ##untersuchen auf +OR+, splitten und als array speichern? als hashmap? aufrufen nur bei type?
+                ## OR für displaname mit ODER ersetzen?
+
+                    #set($type = 'field')
+                    #set($filter_contains_missing_value = false)
+
+                    #set($selection = $fq_string.split(":",2))
+                    #set($field = $selection[0].trim())
+                    #set($value = $selection[1].trim())
+
+                    #if($fq_string.startsWith("(-") && $fq_string.contains($missing_value_range))
+
+                        #set($field = $field.replaceFirst("\(-", ""))
+
+                    #else
+                    #end
+
+                    #set($values = $fq_string.split(" OR "))##field facets always multivalued
+                    #set($value = [])
+                    #foreach($vl in $values)
+
+                        ##setup field here if not exists, add value in all cases
+
+                        #set($valueParts = $vl.split(":", 2))##field facets always multivalued
+                        ##feldname entfernen
+                        #if($valueParts.size() > 1)
+                            #set($vl =  $valueParts[1] )
+
+                        #else
+                            #set($vl =  $valueParts[0] )
+                        #end
+
+                        #if( $vl.contains($missing_value_range))
+                            #set($vl = $missing_value)
+                        #end
+
+                        #set($vl = $vl.trim().replaceAll('"', ''))
+                        #set($success = $value.add($vl))
+
+                    #end
+
+
+                    #set($filter_name = "#displayfacetname($field)")
+                    #set($filter_name = "<i>$filter_name.trim()</i> : #{join_strings}($value, ' ODER ')")
+
+
+                    #set($field_id = $field)
+
+                    ##todo: add vor each field-value, check in addFieldSelection if field exists and in this case only add value to existing - when to create filtername?
+                    #addFieldSelection($field_id, $field,$filter_name, $fq_string, $type, $value)
+
+            #end
+
+
+
+
+
+        #end
+    #end
+
+
+
+#end
+
+#macro(addFieldSelection $field_id, $field,$filter_name, $fq_string, $type, $value)
+    #set($filter = {'field': $field,
+        'field_name': $filter_name,
+        'fq': $fq_string,
+        'type': $type,
+        'value': $value})
+
+
+    #if(! $selected_filter_queries[$field_id])
+        #set($selected_filter_queries[$field_id] = $filter)
+
+    #end
+#end
+

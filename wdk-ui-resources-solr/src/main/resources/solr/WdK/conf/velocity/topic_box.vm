@@ -1,0 +1,100 @@
+
+#if(!$showtopics.isEmpty())
+
+    #topic_selector_button()
+
+    <a class="pure-button deselect_all_topics" href="#{url_for_home}#{lens_without_P}(['show_topic', 'ct'])">Alle Topics abw&aumlhlen</a>
+
+    #select_current_topic()
+
+
+<div class="selected_topics">
+
+<h2>Ausgew&auml;hlte Topics</h2>
+
+
+    #foreach($topicname in  $showtopics)
+
+
+          <p>
+              #set($displaytopicname = "#displaytopicname($topicname)")
+              #set($displaytopicname = $displaytopicname.trim())
+
+             ## $topicname #topicmodelfield($topicname)
+              #set($topicmodelfield = "#topicmodelfield($topicname)")
+              #set($topicmodelfield = $topicmodelfield.trim())
+              #set($selected = false)
+              #set($values_no_current = [])
+              #set($values_with_current = [])
+              #if($selected_filter_queries[$topicmodelfield])
+
+                  #foreach($value in $selected_filter_queries[$topicmodelfield].value)
+
+                      #if($value == $displaytopicname)
+                          #set($selected = true)
+                      #else
+                          #set($success =  $values_no_current.add($value))
+                          #set($success =  $values_with_current.add($value))
+                      #end
+                  #end
+
+
+              #end
+
+
+                   #if(!$selected)
+                       #set($success =  $values_with_current.add($displaytopicname))
+                       #set($urlforfilter = "#url_for_facet_filter_multi($topicmodelfield, $values_with_current)")
+                       #set($urlforfilter = $urlforfilter.replaceAll("&show_topic=$topicname", ""))
+
+                       <a href="$urlforfilter" class="add_filter" title="Topic $displaytopicname als Filter einsetzen">
+                           <img src="/solr/WdK.dev/admin/file?file=/velocity/img/filter_icon.png&amp;contentType=image/png" alt=""></a>
+                    #end
+
+              <a class="selected_topic" href="#{url_for_home}#{lens_No_Key_Value}('show_topic', $topicname)" title="abwählen">#displaytopicmodelname($topicname): $displaytopicname ($topiccounts[$topicname ])</a>
+
+                #if($selected)
+                    <div class="remove_filter">Achtung: Topic "$displaytopicname" ist gleichzeitig als Filter und f&uuml; die Analyse ausgew&auml;hlt -
+                        <a href='#url_for_facet_filter_multi($topicmodelfield, $values_no_current)' >
+                            Filter entfernen
+                        </a>
+                    </div>
+                #end
+
+          </p>
+           ##topicfilterform($topicname)
+
+    #end
+
+
+</div>
+    #else
+       #topic_selector_button()
+    #end
+
+
+ <script>
+
+var topicnames = {
+#foreach($topic_short in $topicnames.keySet())
+    #set($topicname = $topicnames.get($topic_short))
+
+	#set($tokens = $topicname.substring(5).replace("[", "").replace(",", "").replace("]",""))
+
+    "$topic_short":{
+		 "name": "#displaytopicmodelname($topic_short): ${topicname}",
+
+		 "tokens": "$esc.html($tokens)",
+         "count" : "$topiccounts[$topic_short ]"
+		},##
+
+#end
+};
+</script>
+
+#macro(topic_selector_button)
+<button  id="topic_selector_button" class="pure-button pure-button-primary">Topics f&uuml;r Analyse ausw&auml;hlen</button>
+#end
+
+
+

@@ -1,0 +1,290 @@
+#**
+ *  Render a complex document in the results list
+ *#
+
+#macro(fieldvalues $p)#foreach($f in $p)#if($velocityCount>1), #{end}$f#end#end
+
+ ##display currently selected facets
+#macro(fq_fieldnames $p)
+	#foreach($fq in $p)
+		#if($velocityCount>1)&
+			#{end}
+			$fq
+		#end
+#end
+
+
+#macro(display_facetvalue $fieldname)
+#set($fieldvalue = false)
+	#set($fieldvalue = $doc.getFieldValue($fieldname))
+	#if($fieldvalue && $fieldvalue.size() > 0 && !("" == $fieldvalue[0]))
+		<li><em>#displayfacetname($fieldname):</em> #fieldvalues($fieldvalue)</li>
+	#elseif($fieldvalue && $fieldvalue != "" && $fieldvalue != ",")
+		<li><em>#displayfacetname($fieldname):</em> $fieldvalue</li>
+	#end
+#end
+
+#macro(display_topicvalue $fieldname)
+	#set($fieldvalue = false)
+	#set($fieldvalue = $doc.getFieldValue($fieldname))
+	#if($fieldvalue)
+		##set($topic_denormalized = $fieldvalue * $doc.getFieldValue("ntokens"))
+		#truncate( "#displaytopicname($fieldname)" , 20) : $number.percent($fieldvalue) <br/>
+	#end
+#end
+
+#macro(display_topicfacet $fieldname_prefix, $fieldname_suffix)
+	#set($fieldname = "$fieldname_prefix$fieldname_suffix")
+	#set($fieldvalue = false)
+	#set($fieldvalue = $doc.getFieldValue($fieldname))
+	#if($fieldvalue)
+		##set($topic_denormalized = $fieldvalue * $doc.getFieldValue("ntokens"))
+		<li><em>#displaytopicmodelname($fieldname_prefix):</em> $fieldvalue </li>
+	#end
+#end
+
+
+## Title
+#set($title = "["+$doc.getFieldValue('id')+"]")
+
+## Book title
+#set($booktitle = $doc.getFieldValue($booktitlefield).toString().replace('[', '').replace(']', ''))
+
+## URL
+#if($doc.getFieldValue('url'))
+  #set($url = $doc.getFieldValue('url'))
+#elseif($doc.getFieldValue('resourcename'))
+  #set($url = "file:///$doc.getFieldValue('resourcename')")
+#else
+  #set($url = "$doc.getFieldValue('id')")
+#end
+
+
+
+
+
+
+#set($pagenr = $doc.getFieldValue($pagefield))
+
+#if( $doc.getFieldValue($bookfield))
+
+	#set($ppn = $doc.getFieldValue($bookfield).toString().replace('[', '').replace(']', ''))
+
+	##set($ppn = $doc.getFieldValue($bookfield))
+
+
+	##entferne weitere ppns ausser der ersten (mehrbaendige werke?
+
+ #end
+
+
+#set($document_id = $doc.getFieldValue('document'))
+
+##todo: t_abs und t_n unterscheiden, einmal absolut, einmal als %
+#if($render != "bookonly")
+
+<div class="sortdetails">
+
+
+	#if($curr_sort_short)
+		#set($sortedbytopic = "#istopicfilter($curr_sort_short)")
+		#if($curr_sort_short == $curr_topic_short)
+		 	<em>#display_topicvalue($curr_topic_short)</em><br/>
+		#elseif($curr_sort_short == $timefacet)
+			<em>$doc.getFieldValue($timefacet)</em><br/>
+		#elseif($curr_sort_short.startsWith('{!func}'))
+			<em>Relevanz #truncate($statsonquery, 20):</em>
+			#if($doc.getFieldValue($curr_sort_short))
+				$number.percent($doc.getFieldValue($curr_sort_short))
+			#end
+		#elseif(!$curr_sort_short.startsWith("sum"))
+			<em>$doc.getFieldValue($curr_sort_short)</em><br/>
+		#else
+			#set($topicfiltersum = 0)
+			#foreach($tfq in $topicfiltertopics)
+		 		#set($success = $topicstodisplay.add($tfq))
+		 		#set($topicfiltersum = $topicfiltersum + $number.toNumber($doc.getFieldValue($tfq)))
+			#end
+			#if($topicfiltersum > 0)
+				<em>Summe Filtertopics: <b>$number.percent($topicfiltersum)</b></em><br/>
+			#end
+		#end
+
+		#if($render == "books_grouped")<span style="font-size:80%">(H&ouml;chster Wert in Werk)</span>
+ 			<br/>	#end
+
+
+	#end
+
+
+#set($topicstodisplay = [])
+
+##add currenttopic
+#if($curr_topic_short && $curr_topic_short != $curr_sort_short)
+	#display_topicvalue($fieldname)
+#end
+#if($params.getParams('show_topic') && $params.getParams('show_topic').size() > 0)
+	#foreach($fieldname in  $params.getParams('show_topic'))
+			#if($fieldname != $curr_sort_short)#display_topicvalue($fieldname)#end
+	#end
+#end
+
+#if( $topicfiltertopics.size()>0 )
+	#foreach($fieldname in  $topicfiltertopics)
+			#if($fieldname != $curr_sort_short)#display_topicvalue($fieldname)#end
+	#end
+#end
+
+#if($topicstodisplay.size()>0)
+		#foreach($fieldname in  $topicstodisplay)
+			#if($fieldname != $curr_sort_short)#display_topicvalue($fieldname)#end
+		#end
+#end
+
+
+</div>##sortdetails
+#end
+
+#if($doc.getFieldValue($linktypefield))
+    #set($linktype = "#field($linktypefield)")
+#end
+
+<div class="result-title">
+
+###Render Title
+#if($render == "books_grouped")##grouped by book
+ 	#set($lensnogds = "#lens_without_P(['group','queryOpts','group.field','group.ngroups', 'document', 'sort'])")
+	#set($sortpages = "&sort=page+asc")
+	<span class="docpage">$countdocs.</span>&nbsp;<a title="Ergebnisse aus diesem Werk in neuem Fenster" href="#url_for_home$lensnog&fq=document:$document_id&v.template=browse_docs$sortpages" target="_blank"><em>$group.doclist.numFound Seiten </em> <a/> in:
+	<h2>
+	  <a title="Alle Seiten dieses Werkes in neuem Fenster" href="#url_for_home?fq=document:$document_id&v.template=browse_docs&sort=page+asc&facet=false" target="_blank">$booktitle</a>  <a title="Werk als zus&auml;tzlicher Filter" href="#url_for_home#{lens_No_CurrentFQ}("document:$document_id")&fq=document:$document_id"><img src="#{url_for_solr}/admin/file?file=/velocity/img/filter_icon.png&contentType=image/png" alt=""/></a>
+	</h2>
+
+
+#elseif($render == "bookonly")
+
+	<h1>$booktitle</h1>
+
+#elseif($render == "page")
+
+	<h2>
+	  <span class="docpage">$countdocs.</span> - S. $pagenr</span>
+	</h2>
+#else
+
+	<h2>
+	  <span class="docpage">$countdocs.</span>&nbsp;<a title="Alle Seiten dieses Werkes in neuem Fenster" href="#url_for_home?fq=document:$document_id&v.template=browse_docs&sort=page+asc&facet=false" target="_blank">$booktitle</a> <a title="Werk als zus&auml;tzlicher Filter" href="#url_for_home#{lens_No_CurrentFQ}("document:$document_id")&fq=document:$document_id"><img src="#{url_for_solr}/admin/file?file=/velocity/img/filter_icon.png&contentType=image/png" alt=""/></a>
+	  <span class="pagenr">- S. $pagenr</span>
+	</h2>
+
+#end
+
+##render Bookmetadata for all settings except of "page"
+#if( $render != "page")
+
+	#if($doc.getFieldValue($timefacet))
+	 <b>#field($timefacet)</b> -
+	#end
+	## Erscheinungsort: Verlag
+	#if($doc.getFieldValue($publicationplacefield))
+            #field($publicationplacefield)
+	#end
+
+	#if($doc.getFieldValue($publisherfield))
+		: #field($publisherfield)
+    #end
+
+<ul class="page_doc_metadata">
+	#foreach($fieldname in $metadata_book)
+			#display_facetvalue($fieldname)
+	#end
+
+</ul>
+
+#end
+
+##render showfields for all
+#if($params.getParams('sf'))
+<ul class="page_doc_metadata">
+	#foreach($fieldname in  $params.getParams('sf'))
+		<li>#display_facetvalue($fieldname)</li>
+	#end
+</ul>
+#end
+
+</div> <!--End result-d -->
+
+#if($render != "books_grouped" && $render != "bookonly")
+		## Main content of doc
+		<div class="result-body">
+		 ##field('text')
+		 #if($response.response.highlighting.get($docId).get('text') )
+		 	#set($highlightedtext = $response.response.highlighting.get($docId).get('text'))
+		 	#set($highlightedtext = $esc.html($highlightedtext[0]).replaceAll("&lt;em&gt;", "<em>").replaceAll("&lt;/em&gt;","</em>" ))
+		 	$highlightedtext
+		 #else
+		 	$esc.html($doc.getFieldValue('text'))
+		 #end
+		</div>
+
+
+
+		<ul class="page_doc_extracted_metadata">
+
+		#foreach($topicmodelprefix in $topicmodelprefixes)
+			    #display_topicfacet($topicmodelprefix , $topicmodelfieldsuffix)
+		#end
+		#foreach($fieldname in $extracted_metadata_fields)
+				#display_facetvalue($fieldname)
+		#end
+
+		</ul>
+#end
+
+<div class="doc_footer">
+## Erscheinungsort: Verlag
+ #if($render != "books_grouped" && $render != "bookonly")
+        #makePageLink($ppn $pagenr $linktype)
+    ## Link for MLT / More Like This / Find Similar
+    <div class="doc_links">
+        #set($mlt_link_base = "#url_for_home?q=id:%22$docId%22&mlt=true&v.template=browse_docs&mlt.count=20&facet=false&fq=&mlt.fl=")
+        &nbsp;&Auml;hnliche Ergebnisse:
+        <a href="${mlt_link_base}text" target="_blank">nach Inhalt</a> |
+        #*    <a href="${mlt_link_base}#foreach($topicmodelprefix in $topicmodelprefixes)${topicmodelprefix}${topicmodelfieldsuffix},#end" target="_blank">
+        nach Top-Topics</a> |*#
+            <a href="${mlt_link_base}#foreach($extracted_metadata_field in $extracted_metadata_fields)${extracted_metadata_field},#end" target="_blank">
+        nach enthaltenen Namen</a>
+
+    </div>
+
+#elseif($render == "books_grouped") ##book
+    <div class="doc_links">
+    ##todo - setlink to overview in gei-digital.de
+    #makeBookLink($ppn $pagenr $linktype)
+    </div>
+#end
+
+
+#if($render != "books_grouped" && $render != "bookonly")
+<div class="addpageinfo">
+    <ul >
+        #display_facetvalue('divType')
+        #display_facetvalue('ntokens')
+        #display_facetvalue('nsentences')
+
+        #if($params.getParams('divtokens') && $params.getParams('nsentences'))
+            #set($divtokens = $doc.getFieldValue('ntokens') / $doc.getFieldValue('nsentences'))
+            <li><em>div:</em> $divtokens </li>
+        #end
+        <li><em>Seiten-ID:</em> <a target="_blank" href="#{url_for_solr}/browse?fq=id:$doc.getFieldValue('id')&facet=false&v.template=browse_docs">$doc.getFieldValue('id')</a></li>
+
+    </ul>
+</div>
+
+#end
+
+</div>
+
+#parse('debug.vm')
+
+

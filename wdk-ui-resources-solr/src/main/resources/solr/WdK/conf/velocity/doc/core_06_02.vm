@@ -1,0 +1,30 @@
+##core 06_02
+#set($doc_core_created = "15-05-2015")
+#set($doc_document_export_date = "xx-xx-2015")
+#set($doc_metadata_date = "29-01-2015")
+
+#set($doc_tm_general = "Topic Models generiert mit Latent Dirichlet Allocation (LDA) mit Mallet.
+							<br/>Vorverarbeitung: OCR-Korrektur, Wortfilter, Stopwords
+							(Funktionsw&ouml;rter) entfernt. 
+							<br/>Nur Nomen (approximiert &uuml;ber
+							W&ouml;rter beginnend mit Gro&szlig;buchstaben). 
+							Input-Einheit: S&auml;tze")
+							
+#set($doc_core_short_description = "<em>Index-Version WdK_$core_version</em> enth&auml;lt Topicmodels basierend auf S&auml;tzen als Dokumenteinheit,<br/>
+									$doc_tm_general")
+
+
+#set($doc_core_changes = "Fixed topic proportions")
+
+
+
+##will be displayd next to topicmodels as a ?-Popup-Link
+
+#set($doc_tm_descriptions = {"topic_capitals_chapters_sentences_25_"  : "Nomen - basierend auf S&auml;tzen - LDA - 25 Topics",
+                             "topic_capitals_chapters_sentences_50_"  : "Nomen - basierend auf S&auml;tzen - LDA - 50 Topics",
+						     "topic_capitals_chapters_sentences_100_" : "Nomen - basierend auf S&auml;tzen - LDA - 100 Topics",
+						     "topic_capitals_chapters_sentences_150_" : "Nomen - basierend auf S&auml;tzen - LDA - 150 Topics",
+						     "topic_capitals_chapters_sentences_200_" : "Nomen - basierend auf S&auml;tzen - LDA - 200 Topics",
+						      "topic_sentiws_t25_" : "Wertende Begriffe - LDA - 25 Topics"
+						     })
+

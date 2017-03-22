@@ -1,0 +1,223 @@
+
+
+#set($topicmodelprefixes = ["topic_capitals_chapters_sentences_50_", "topic_capitals_chapters_sentences_100_", "topic_capitals_chapters_sentences_200_"])
+
+##generates lists of topics with ideas and names and identifies the  currently selected topics
+##used in subsequent
+
+#set($topicmodelfieldsuffix = "topwords")
+##topic prefixes als hashmap definieren_ key, name
+
+#set($topicmodelnames = ["TM Hauptwörter (50)", "TM Hauptwörter (100)", "TM Hauptwörter (200)"])
+#set($topicmodelcounts = [49, 99, 199])
+
+#set($defaultfilter = 'ntokens:[50 TO *] AND nsentences:[3 TO *] AND NOT(alphaCharsPerToken:[0 TO 1.71] OR alphabeticCharsRatio:[0 TO 0.71])')
+
+#set($junkfilter = {$defaultfilter : 'min. 50 Worte, min. 3 Sätze, geringer Anteil Sonderzeichen/Wort',
+    '{!frange l=5}div(ntokens,max(nsentences,1))':'Mindestens 5 Worteinheiten/Satz',
+    '-divType:(Addendum OR Advertising OR Appendix OR AttachedWork OR Bibliography OR Binder OR colourchart OR Cover OR Dedication OR Epilogue OR Errata OR Figure OR Frontispiece OR genealogicaltable OR IllustrationDescription OR Imprint OR Index OR IndexAuthor OR IndexLocation OR IndexOfChronology OR IndexPersons OR IndexSpecial OR IndexSubject  OR ListOfIllustrations OR ListOfMaps OR Map OR MultiVolumeWork OR OtherDocStrct OR panel OR Preface OR Prepage OR regentpanel OR Remarks OR Supplement OR Table OR TableOfAbbreviations OR TableOfContents OR TableOfLiteratureRefs OR TitlePage)'
+:'Medientypen filtern'
+
+})
+
+    #*    'nsentences:[3 TO *]': 'Mindestens 3 S&auml;tze'
+     'NOT(alphaCharsPerToken:[0 TO 1.71] OR alphabeticCharsRatio:[0 TO 0.47])':'Junk filtern (Anteil Sonderzeichen/Wort)',
+
+'NOT(alphaCharsPerToken:[0 TO 1.71] OR alphabeticCharsRatio:[0 TO 0.71])':'Junk &amp; Listen Filtern (hoher Anteil Sonderzeichen)'*#
+
+#set($facet_query_names = {'Afz_wdk:[2 TO *]': 'Auflage 2 und höher',
+							'-Afz_wdk:[2 TO *]': 'keine Auflage oder Auflage 1'
+                            })
+
+#set($success = $facet_query_names.putAll($junkfilter))
+
+
+#set($facet_query_groups = {"text:": "OntoQuery",
+                            "-Afz_wdk:": "Auflage",
+                            "Afz_wdk:": "Auflage"
+})
+
+##set($facetkeynames = ["goobi_PublicationYear", "goobi_singleDigCollection", "goobi_PublisherName", "goobi_TitleDocMainShort", "document", "goobi_PlaceOfPublication", "goobi_TitleDocMainShort", "goobi_TitleDocMainShort_Compl", "ntokens"])
+##set($facetnames = ["Erscheinungsjahr", "Sammlungen", "Verlag", "Dokument", "ID", "Erscheinungsort", "Kurztitel", "Titel", "Filter Tokens"])
+
+#set($facetkeynames = ["goobi_PublicationYear",
+					 "goobi_singleDigCollection",
+					"goobi_PublisherName",
+					"goobi_TitleDocMainShort",
+					"document",
+					"goobi_PlaceOfPublication",
+					"goobi_TitleDocMainShort_Compl",
+ 					"Verlag_wdk",
+ 					"namedentities_per",
+ 					"namedentities_loc",
+					"namedentities_org",
+ 					"namedentities_misc",
+ 					"years",
+ 					"Afz_wdk",
+ 					"Inhalt_Raum_Thema_wdk",
+                    "Inhalt_Zeit_wdk",
+ 					"goobi_Author.displayName",
+ 					"goobi_Editor.displayName",
+ 					"page",
+ 					"Afz_wdk",
+                    "text",
+                    "divType",
+                    'Schulbuchtyp_wdk',
+                    "Jahr der Erstauflage_wdk",
+                    "Schultyp_Allg_wdk_nDistinct",
+                    "Schultyp_wdk_nDistinct",
+                    "Forschungskorpus_WdK",
+                    "Schulformen_opac"])
+
+#set($facetnames = ["Erscheinungsjahr",
+					"Sammlung",
+					"Verlag",
+					"Kurztitel",
+					"Werk",
+					"Erscheinungsort",
+					"Titel",
+					"Verlag (ges&auml;ubert wdk)",
+					"Extrahierte Personennamen",
+					"Extrahierte Ortsnamen",
+					"Extrahierte Organisationen",
+					"Weitere extrahierte Benennungen",
+					"Extrahierte Jahreszahlen",
+					"Auflagennummer",
+					"Inhalt Raum/Thema",
+                    "Inhalt: Zeit",
+					"Autor",
+					"Hrsg.",
+					"Seite",
+					"Auflage",
+                    "Volltext",
+                    "Strukturtyp",
+                    'Schulbuchtyp_wdk',
+                    "Jahr der Erstauflage_wdk",
+                    "Schultyp_Allg_wdk Anzahl Werte",
+                    "Schultyp_wdk Anzahl Werte",
+                    "Forschungskorpus_WdK",
+                    "Schulform_opac"])
+
+#set($metadata_book = [
+	'goobi_Author.displayName',
+	'goobi_Editor.displayName',
+	'Afz_wdk',
+    'Jahr der Erstauflage_wdk',
+	'goobi_singleDigCollection',
+    'Schulbuchtyp_wdk',
+	'Schultyp_wdk',
+    'Schultyp_Allg_wdk',
+	'Bildungsstufe_opac',
+	'Schulformen_opac',
+	'Regionen_opac',
+    "Inhalt_Raum_Thema_wdk",
+    "Inhalt_Zeit_wdk",
+    'Geschlecht_wdk',
+    'Konfession_wdk'
+])
+
+#set($extracted_metadata_fields = [
+	"namedentities_per",
+ 	"namedentities_loc",
+ 	"namedentities_org"
+])
+
+##to be activated as additional facets because of performance reasons, to be displayed as (relative?) termcloud?
+#set($text_facets = [
+    "text",
+    "namedentities_per",
+    "namedentities_loc"
+])
+
+##facets with unique-option
+#set($add_facet_unique_option = [
+    "Schultyp_Allg_wdk",
+    "Schultyp_wdk"
+])
+
+
+
+
+#set($unique_option_suffix = "_nDistinct")
+
+#*
+ 1877 - Leipzig : Teubner
+
+Autor: Lübker, Friedrich
+Hrsg.: Erler, Max
+Sammlungen: Kaiserreich Geschichtsschulbuecher
+Schultyp_wdk: Gymnasium
+Geschlecht_wdk: Jungen
+Bildungsstufe_opac: Sonstige Lehrmittel, alle Lernstufen
+Schulformen_opac: Gymnasium
+
+*#
+
+#set($timefacet = 'goobi_PublicationYear')
+#set($pagefield = 'page')
+#set($bookfield = 'goobi_CatalogIDDigital')
+#set($booktitlefield = 'goobi_TitleDocMain')
+#set($publicationplacefield = 'goobi_PlaceOfPublication')
+#set($publisherfield = 'goobi_PublisherName')
+#set($auflagenzahlfield = 'Afz_wdk')
+#set($groupfield = 'document')
+#set($authornamefield = 'goobi_Author.displayName')
+#set($textexport = 'text_normalized')
+
+
+
+#set($additional_statsfacets = [
+    "namedentities_per",
+    "namedentities_loc"
+])
+
+#set($missing_value = "[keine Angabe]")
+#set($missing_value_range = "[* TO *] *:*")
+
+#set($timefacet_grouped = "${timefacet}_Jahrzehnte")
+#set($success = $facetkeynames.add($timefacet_grouped))
+#set($success = $facetnames.add("Erscheinungsjahr n. Jahrzehnten"))
+
+#set($additional_params = ["fl", "sf", "ct", "show_topic", "hl.q", "rows", "group", 'group.field', 'group.ngroups', 'group.facet', 'statsonquery', 'topicmodel', 'group_stats_field',"top_groups_no", "textfs"])
+
+#set($additional_params_stats = ["v.template",
+    "facet_pivot_2",
+    "facet_pivot_1",
+"facet.pivot",
+"facet.limit",
+"facet.pivot.mincount",
+"rel_values",
+"top_entries_max"])
+
+#set($termnumbers = [25, 50, 100, 500, 1000])
+#set($termfacets = [ "f.namedentities_per.facet.limit", "f.namedentities_loc.facet.limit", "f.text.facet.limit"])
+
+
+
+
+#set($termnumbers_stats = [25, 50, 100])
+
+##fqs($request.params.getParams('fq'))
+#set($link_base = "http://gei-digital.gei.de/viewer/!image/")
+#set($link_toc = "http://gei-digital.gei.de/viewer/!toc/")
+#set($link_targetname = "gei-digital.de")
+
+#set($link_type_field = "") ##set to field used to discriminate linktype in linkmacro below
+
+
+#macro(makePageLink $identifier $pagenumber $linktype )
+<a class="linkToSource" target="_blank" href="${link_base}${identifier}/${pagenumber}/-/">Seite auf $link_targetname </a>
+#end
+
+#macro(makeBookLink $identifier $pagenumber )
+<a class="linkToSource" target="_blank" href="${link_toc}${identifier}/${pagenumber}/-/">Werk auf $link_targetname</a>
+
+#end
+
+
+#set($statswithoutparams = ["rows", "hl.q", "facet.pivot", 'group','queryOpts','group.field','group.ngroups', 'group.facet' , 'facet.field', 'textfs'])
+
+#set($noTopicParam = "__noTopic__")
+
+#set($core_version = "07_03")
+#parse("doc/core_${core_version}.vm")

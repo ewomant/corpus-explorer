@@ -1,0 +1,10 @@
+#**
+ *  Hyperlinked spelling suggestions in results list
+ *#
+
+#set($dym = $response.response.spellcheck.suggestions.collation.collationQuery)
+#if($dym)
+<div class="dym">  Did you mean
+  <a href="#{url_for_home}#{lensNoQ}&q=$esc.url($dym)">$esc.html($dym)</a>?
+</div>
+#end

@@ -1,0 +1,71 @@
+<div id="topic_selector" title="Topics ausw&auml;hlen">
+
+    <form id="topic_selector_form" action="#{url_for_home}" method="get" class="pure-form">
+       Auswahl:<div class="selected_topics"></div>
+        #dialog_controls()
+
+        #q_form()
+        #fqs_form()
+
+<div class="form-controls">
+    <input type="button" value="Alle abw&auml;hlen" class="uncheck pure-button pure-button-secondary"> Filter: <input type="text" size="35" id="quicklookupbox" placeholder="Topics nach Stichwort filtern..." />
+</div>
+    #set($tmnr_i = 0)
+
+
+    #foreach($topicmodelprefix in $topicmodelprefixes)
+
+        <div class="topic_selector_tm" id="${topicmodelprefix}box">
+            #set($topicmodelnumber = $topicmodelcounts[$tmnr_i]+1)
+          <h2 id="${topicmodelprefix}toggle" class="topic_selector_title">
+              <span class="tm_title">$topicmodelnames[$tmnr_i]</span> &dash;
+              <span class="topiccount">$topicmodelnumber</span>
+              <span class="topiccount_selected"></span></h2>
+
+        <table class="topic_selector_table">
+            <thead><tr>
+            <th class="topic_number">#</td>
+            <th class="topic_label">Name</th>
+            <th class="count">Treffer</th>
+            <th class="sorter-false checkbox">&nbsp;</th>
+            </tr></thead>
+            <tbody>
+
+        #set( $arr = [0..$topicmodelcounts[$tmnr_i]] )
+        #foreach( $i in $arr )
+           <tr>
+            #set ( $topic_list_topic = $topicmodelprefixes[$tmnr_i]+"${i}" )
+            #set ($topicname = false)
+            #set ($topicname = "#displaytopicname($topic_list_topic)")
+                <td class="topic_number">$i</td>
+                <td class="topic_label"><label for="$topic_list_topic">$topicname</label></td>
+                <td class="count">$topiccounts[$topic_list_topic ]</td>
+                <td class="checkbox">
+                    <input class="tcb" type="checkbox" id="$topic_list_topic" name="show_topic" value="$topic_list_topic" #foreach($currentlyshowntopic in  $showtopics)#if($currentlyshowntopic == $topic_list_topic) checked #end#end/></td>
+
+            </tr>
+        #end
+        </tbody> </table>
+        </div>
+
+        #set($tmnr_i = $tmnr_i+1)
+    #end
+
+
+
+
+        #additional_params_form_nop("show_topic")
+
+        #dialog_controls()
+
+    </form>
+</div>
+
+#macro(dialog_controls)
+<div class="dialog-controls">
+    <input type="button" value="Abbrechen" class="topic-cancel pure-button pure-button-secondary">
+    <input type="submit" value="Auswahl &uuml;bernehmen" class="topic-select pure-button pure-button-primary">
+
+
+</div>
+#end

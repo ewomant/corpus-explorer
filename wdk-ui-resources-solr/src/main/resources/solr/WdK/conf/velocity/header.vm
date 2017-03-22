@@ -1,0 +1,8 @@
+#**
+ *  Render the top section of the page visible to users
+ *#
+
+<div class="header_logo"><a href="#url_for_home#if($request.params.get('debugQuery'))?debugQuery=true#end">
+    <img alt="Welt der Kinder - Explorer BETA" id="logo" src="#{url_for_solr}/admin/file?file=/velocity/img/logo-wdk.png&contentType=image/png"/></a>
+<a href="#indexinformation" class="indexinformationlink">WdK_$core_version</a></div>
+

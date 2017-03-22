@@ -1,0 +1,110 @@
+##move form to topics
+
+##
+##here: list of links: Relevanz für Anfrage (wenn Query), Erscheinungsjahr aufwärts, Erscheinungsjahr abwärts, ggf. Topic, ggf. Topics aus Topicfilter
+##if sort == -->class= selected (background), if sort inc asc --> class = asc, if desc = desc, reihenfolge Topic: Desc, asc - Jahr: Asc desc
+##sortby topicfilters combination wenn
+
+##in topics:
+##js onchange event: sort=selected_topic
+
+
+
+##bug: check for chartchart = true without current_topic (2 filtertopics?)
+
+
+
+
+
+
+
+##todo -dritter zustand: releanvz (kein sort)
+##macro füer reihe -> sum($topicfiltersort) - reihenfolge?
+#macro(switchdirection $direction)#if($direction == "desc")asc#{else}desc#end#end
+
+#macro(sortelement $sortfield $name)
+	##"$sortfield" (aktuell "$curr_sort_short")
+	#if(
+		($curr_sort_short != "" && ($curr_sort_short == $sortfield || ($sortfield == "" && $curr_sort_short == "score")))
+		|| ($curr_sort_short.startsWith("sum(") && $sortfield.startsWith("sum("))
+		|| (!$curr_sort_short && $sortfield == "")
+		)##selected sortorder
+
+		<li class="sortselected $curr_sort_dir">
+
+		 #if($curr_sort_dir == "asc")
+			##back: ohne sort
+			 <a class="sortnormal" href="#{url_for_home}#{lensNoS}">$name</a>
+		#elseif($sortfield == "" || $curr_sort_short == "score")
+			 <span>$name</span>
+
+		#else
+		 	 <a class="sortasc" href="#{url_for_home}#{lensNoS}&sort=$sortfield+asc">$name</a>
+		 #end
+		 </li>
+	#else
+		<li>
+			#if($sortfield == "" ||$sortfield == "score" )
+				<a class="sortnormal" href="#{url_for_home}#{lensNoS}">$name</a>##nach relevanz sortieren
+            #elseif($sortfield.startsWith("product("))##sort without length normalisaztion
+               <a class="sortdesc" href="#{url_for_home}#{lens_No_CurrentFQ_without_P}('ntokens%3A[*+TO+5000]', ['sort','fl'])&sort=$sortfield+desc&fq=ntokens%3A[*+TO+5000]&fl=*,score,$sortfield">$name</a>
+            #elseif($sortfield == $pagefield)
+                <a class="sortasc" href="#{url_for_home}#{lensNoS}&sort=$sortfield+asc">$name</a>
+            #else ##alle anderen Felder: absteigend sortieren
+
+				<a class="sortdesc" href="#{url_for_home}#{lensNoS}&sort=$sortfield+desc">$name</a>
+			#end
+		</li>
+	 #end
+#end
+
+
+<div class="sortbox">
+<em>Sortieren:</em>
+	<ul class="sortfields">
+
+		#if(($request.params.get('q') && $request.params.get('q') != "") )
+			#sortelement("", "Relevanz zu Anfragetermen" )
+		#end
+		#sortelement($timefacet, "Erscheinungsjahr" )
+
+        #sortelement($pagefield, "Seitenzahl" )
+
+        #set($topic_fields_sort = [])
+
+        #if($curr_topic_short && $curr_topic_short != "" && $curr_topic_short != "score")
+            #set($success = $topic_fields_sort.add($curr_topic_short))
+        #end
+        #set($success = $topic_fields_sort.addAll($showtopics))
+        #set($success = $topic_fields_sort.addAll($topicfiltertopics))
+
+
+
+        #foreach($topic_short in $topic_fields_sort)
+
+            #set($topicname = "#displaytopicname($topic_short)")
+            #set($topicname_short = $topicname.split(":",2)[0] )
+            #set($topicmodelname = "#displaytopicmodelname($topic_short)")
+			#sortelement($topic_short, "$topicmodelname: $topicname_short")
+            ##sortelement("product($curr_topic_short,ntokens,alphabeticCharsRatio)", "Topic o.N." )
+
+		#end
+		##if($topicfiltertopics.size() == 1)<li><a href="#{url_for_home}#{lensNoS}&sort=$topicfiltertopics[0] desc">Topic aus Filter v</a></li>
+
+
+#*
+	###Add sort by sum of topic-values
+		#if($topicfiltertopics.size() > 1)
+	       	#set($topicfiltersort = "")
+				#foreach($topicfiltertopic in $topicfiltertopics)
+					#if($velocityCount == 1)
+						#set($topicfiltersort = $topicfiltersort + $topicfiltertopic)
+					#else
+						#set($topicfiltersort = $topicfiltersort + ", " + $topicfiltertopic)
+					#end
+				#end
+			#sortelement("sum($topicfiltersort)", "Summe Topicfilter")
+		#end
+		*#
+	</ul>
+</div>

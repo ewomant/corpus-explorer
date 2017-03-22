@@ -1,0 +1,319 @@
+
+
+#set($queryterms = $esc.url($params.get('q')))
+
+#if(!$queryterms || "$!queryterms" == "")
+	#set($queryterms = "*")
+#end
+
+
+##http://localhost:8983/solr/WdK.dev/select?facet=true&facet.pivot={!stats%3Dp}goobi_PublicationYear%2Cgoobi_singleDigCollection&stats=true&stats.field={!tag%3Dp+mean%3Dtrue}topic_capitals_chapters_sentences_50_12&wt=xml&facet.limit=10000&rows=0
+#set($groupStatsField = $esc.url($params.get('group_stats_field')))
+
+#set($groupform = false)
+
+
+##- include timefield
+##
+
+
+#set($withoutparams = ['q','s','rows', 'hl.q', 'group.field', 'group', 'group.ngroup', 'group.facet', 'facet.field', 'textfs', 'group.field'])
+
+#set($success = $withoutparams.addAll($termfacets))
+#set($lensforstats="#lens_without_P($withoutparams)&q=${queryterms}&rows=0")
+
+
+##exclude junkf-filter from corpus-base-query
+#set($activeFilter = "")
+#if($params.getParams('fq'))
+    #foreach($fq in $params.getParams('fq'))
+        #if($fq.contains($defaultfilter))
+            #set($activeFilter = "$activeFilter&fq=$esc.url($defaultfilter)")
+        #end
+        #if($fq.contains($timefacet))
+            #set($activeFilter = "$activeFilter&fq=$fq")
+        #end
+    #end
+#end
+
+#set($success = $withoutparams.add('fq'))
+#set($lensforscorpusstats="#lens_without_P($withoutparams)&q=*&rows=0$activeFilter")
+
+
+#macro(statsparams)&facet=true&stats=true&facet.pivot={!stats%3Dp}${timefacet}#if($groupStatsField && $groupStatsField != "")%2C${groupStatsField}&facet.pivot={!stats%3Dp}${groupStatsField}#end#end
+
+#macro(solrjson_pivot_stats_url_json)#{url_for_solr}/json$lensforstats#{statsparams}#end
+
+
+##macro(solrjson_pivot_stats_url_json_old)#{url_for_solr}/json$lensforstats&wt=json&stats=true&facet.limit=10000&facet.pivot={!stats%3Dp}$timefacet#if($groupStatsField && $groupStatsField != "")%2C${groupStatsField}&facet.pivot={!stats%3Dp}${groupStatsField}#end#end
+
+#macro(solrjson_pivot_stats_corpus_url_json)#{url_for_solr}/json$lensforscorpusstats#{statsparams}#end
+
+	## &facet.pivot={!stats%3Dp}Schultyp_Allg_wdk
+	## statsgroupfield uebergeben
+	## stats.field
+
+
+<div id="chartbox">
+<script>
+
+var chart_conf = {
+	baseurl: '#solrjson_pivot_stats_corpus_url_json()',
+	currentselection_url : "#{url_for_solr}/browse$lensforstats",
+    statsfield: [],
+    statsfield_title: [],
+	timefield : "$!timefacet",
+	groupfield : "$!groupStatsField",
+	groupfield_title : false,
+    top_groups_no: 10,
+    norelativevalues: false,
+
+	statsonquery : false,
+
+
+	stats_color : "#C14D00"
+
+};
+
+
+//define url for counts on years of complete index, without any filters applied
+##set($solrjson_base_facet = "#{url_for_solr}/browse?q=*&wt=json&rows=0&facet=true&facet.field=goobi_PublicationYear&facet.limit=10000")
+##var solrjson_base_facet = "$solrjson_base_facet";
+
+//current stats facet, as of know only goobi_PublicationYear is supported
+## create url for new window, with current fqs without facetfield - add to barcharts etc onclick function
+
+
+#set($current_query_url = "#url_for_filters_no_current($timefacet)")
+
+//define base query used to select single years from the histogramm
+current_query_url = '${current_query_url}&v.template=browse_docs';
+#set($pagesRelBut = "% Treffer pro Jahr")
+#set($relButton = true)
+
+#set($chartShowTopics = false)
+
+#set($ct = $params.get('ct'))
+
+
+#set($statsfielddef = "&stats.field={!tag%3Dp+mean%3Dtrue}")
+#set($statsfieldurl = "")
+#set($statsfield = "")
+#set($statstitle = "")
+
+
+
+#if($groupStatsField && "$!groupStatsField" != "")
+
+    #if(($ct && "$!ct" != ""))
+        #if( $ct != $noTopicParam  )
+            #set($chartShowTopics = true)
+        #end
+
+    #elseif( $showtopics.size() > 0)
+        #set($ct = $showtopics[0])
+
+        #set($chartShowTopics = true)
+
+    #end
+    #if($chartShowTopics)
+        #set($statsfieldurl = "${statsfielddef}$ct")
+        #set($statstitle = "#{displaytopicname}($ct)")
+        #set($statstitle = "$esc.s$statstitle.trim()$esc.s")
+        #set($statsfield = "'$ct'")
+        #set($chartname = "Topic $statstitle nach $groupStatsField" )
+
+    #end
+
+
+
+#elseif( $showtopics && $showtopics.size() > 0)
+    ##add all topics (chart not grouped)
+    #set($chartShowTopics = true)
+    #foreach($topicname in  $showtopics)
+        #set($statsfieldurl = "${statsfieldurl}${statsfielddef}${topicname}")
+        #if($statsfield != "")#set($statsfield = "$statsfield,")#end
+        #set($statsfield = "$statsfield'$!topicname'")
+    #end
+
+
+
+#end
+
+#if($chartShowTopics)
+chart_conf.currentselection_url = $esc.s#{solrjson_pivot_stats_url_json}${statsfieldurl}$esc.s;
+//set topicname for chart legend
+chart_conf.baseurl = $esc.s#solrjson_pivot_stats_corpus_url_json()${statsfieldurl}$esc.s,
+
+        chart_conf.statsfield = [$statsfield];
+chart_conf.statsfield_title = [$statstitle];
+
+    #set($chartname = "Topic: " + $statstitle)
+#else
+## necessray with pivot-facet?
+topic1title = "";
+chart_conf.currentselection_url  = '#{solrjson_pivot_stats_url_json}';
+    #set($chartname = "Aktuelle Auwahl")
+
+#end
+
+    #set($groupformtext = "Treffer nach Kategorie")
+
+
+#if($queryterms != "*" || ($rpmfq.size() > 0))
+
+		chart_conf.pages_colour = "#BEC6DB";
+
+		// anfrage/ teildokumente
+		#set($groupform = true)
+
+
+	##farbe ändern: blau für anfrage
+	##farbe topicfilter und sorttopic ändern grün
+#end
+//queryterms: $queryterms - rpmfq.size(): $rpmfq.size() - rpmfq[0]: $rpmfq[0]
+
+##cases if whole corpus or only filtered on the dimension shown in the graph (that is all documents in the corpus for each section
+#if((($queryterms == "*" && !($rpmfq.size() > 0))||( $queryterms == "*" && $rpmfq.size() == 1 && $rpmfq[0].startsWith($timefacet))))
+	##case: no query of filter active, auswahl oder die aktuelle Statsquery
+    chart_conf.abs_title = "Seitenzahl pro Jahr im Korpus";
+	chart_conf.norelativevalues = true;
+    chart_conf.pages_colour = "#ddd";
+	#set($relButton = false)
+
+#end
+
+#*
+* statsonquery - https://cwiki.apache.org/confluence/display/solr/The+Stats+Component
+* als stats-field, wie topic, nur als formel
+* facet=true
+facet.query={!tag=q1}manufacturedate_dt:[2006-01-01T00:00:00Z TO NOW]
+facet.query={!tag=q1}price:[0 TO 100]
+facet.pivot={!query=q1}cat,inStock
+https://cwiki.apache.org/confluence/display/solr/Faceting
+
+http://localhost:8983/solr/WdK.dev/json?&fl=*%2Cscore&facet=true&stats=true&rows=0&facet.pivot={!query%3Dsq}goobi_PublicationYear,Schultyp_Allg_wdk&facet.pivot={!query%3Dsq}Schultyp_Allg_wdk&facet.query={!tag%3Dsq}text:kaiser
+
+&facet.query={!tag=sq}text:"kaiser" should be equicanelnt to q=kaiser - check for other terms
+
+Stemming? Normalisierung?
+* *#
+
+#if($chartShowTopics)
+	#set($groupformtext = "Topic nach Kategorie")
+#elseif($relButton)
+
+#elseif($groupStatsField && $groupStatsField != "")
+
+#else
+	chart_conf.groupfield = false;
+	#set($groupform = false)
+#end
+
+#if($params.get('top_groups_no'))
+    #set($top_groups_no = $esc.url($params.get('top_groups_no')))
+#else
+    #set($top_groups_no = 10)
+#end
+chart_conf.top_groups_no =  $top_groups_no;
+    ##todo: Alle abhängigkeiten in solrvis-lg ausser von chart_conf entfernen
+jQuery(document).ready(function() {solrvis_lg_loadchart(chart_conf)});
+
+
+</script>
+
+
+    <h2  id="chartcontrols" class="collapse-button open">Diagramm f&uuml;r $chartname&nbsp;<img alt="statistik" src="#{url_for_solr}/admin/file?file=/velocity/img/stats.png&contentType=image/png"/></h2>
+    <div id="chart" class="collapsible">
+        <form action="#{url_for_solr}/browse"  method="get">
+      #** <pre>
+chartShowTopics ? $!chartShowTopics
+groupStatsField ? $!groupStatsField<br>
+ct ?    $!ct
+statsfield ? $statsfield
+           </pre>**#
+		<div id="chartsettings">
+
+            <div id="y2settings">
+            #if(!$showtopics.isEmpty() || ( $groupStatsField && $!groupStatsField != "") )
+
+                         <input type="radio" id="nosmooth"  name="nosmooth" checked="checked" title="Mittelwert pro Jahr"><label for="nosmooth"><img alt="ungegl&auml;tteter graph" src="#{url_for_solr}/admin/file?file=/velocity/img/graph-icon.png&contentType=img/png"> 1&nbsp;Jahr&nbsp;</label>
+                         <input type="radio" id="smooth" name="smooth" title="Gleitender Mittelwert gemittelt &uuml;ber 5 Jahre"><label for="smooth"><img alt="gegl&auml;tteter graph" src="#{url_for_solr}/admin/file?file=/velocity/img/smoothed-graph-icon.png&contentType=img/png"> 5 Jahre&nbsp;</label>
+
+            #end</div>
+
+
+            ##Differenzieren: Topic gruppieren nach, filter/anfrage gruppieren nach
+
+                #q_form()
+                #fqs_form()
+
+                #additional_params_form_nops(["group_stats_field", "top_groups_no", "ct"])
+
+
+
+
+        <div id="y1settings">
+        #if($relButton)
+                      <input type="radio" id="PagesAbsBut" name="PagesAbsBut" checked="checked"><label for="PagesAbsBut">Absolut</label>
+                      <input type="radio" id="PagesRelBut" name="PagesRelBut"><label for="PagesRelBut">$pagesRelBut</label>
+        #end
+        </div>
+
+    </div>
+    <div id="chartresizable">
+        <div id="chartcontainer"></div>
+    </div>
+
+    <div id="chartlegendcontainer">
+
+        <div id="chartlegendresizable">
+
+            <div id="chartlegend">
+
+                <div id="groupselector_box">
+
+                <fieldset>
+                    <label for="group_stats_field">Gruppenvergleich:</label>
+                    <select name="group_stats_field" id="group_stats" onchange="this.form.submit()">
+                        <option value=""/></option>
+                        #foreach($field in $response.facetFields)
+                            <option value="$field.name" #if($groupStatsField  == $field.name) selected #end>#displayfacetname($field.name)</option> ##todo: selected wenn group_stats_field
+                        #end
+                    </select>
+
+                </fieldset>
+            </div>
+            </div>
+
+
+        </div>
+
+        <div class="topicbox">
+            #parse("topic_box.vm")
+        </div>
+
+
+    </div>
+        </form>
+</div>
+
+</div>
+
+#macro(select_current_topic $ct)
+    #if($showtopics.size() > 0 && $groupStatsField && "$!groupStatsField" != "")
+
+    <div id="select_current_topic" title="Anzuzeigendes Topic bei gruppierten Werten im Diagramm ausw&auml;hlen.">Anzeigen:&nbsp;
+
+    <select name="ct" id="group_stats_value" onchange="this.form.submit()">
+
+        <option value="$noTopicParam" #if($ct  == $noTopicParam) selected #end />Gruppengr&ouml;&szlig;e (kein Topic)</option>
+        #foreach($topic in $showtopics)
+
+            <option value="$topic" #if($ct  == $topic) selected #end >
+                #truncate( "#displaytopicname($topic)" , 50)</option> ##todo: selected wenn group_stats_field
+        #end
+    </select>
+    </div>
+    #end
+#end

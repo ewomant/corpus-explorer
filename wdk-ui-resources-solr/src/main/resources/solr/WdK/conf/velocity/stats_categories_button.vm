@@ -1,0 +1,7 @@
+
+#set($stats_url = "#{url_for_solr}/browse?#{q}&#fqs($params.getParams('fq'))&v.template=statsview_categories&rows=0")
+
+<a  href="$stats_url" target="_blank" class="statsdialogue_button_categories button-small pure-button pure-button-primary" title="Statistiken &uuml;ber Seitenzahl oder aktuelles Topic in zwei Kategorien"><img src="#{url_for_solr}/admin/file?file=/velocity/img/table_import16.png&contentType=image/png"/>
+    &nbsp;Vergleichen: Kategorie x Kategorie</a>
+
+

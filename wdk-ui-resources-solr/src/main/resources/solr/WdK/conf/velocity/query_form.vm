@@ -1,0 +1,62 @@
+#**
+ *  Renders the main query form
+ *#
+
+<div class="query-box">
+
+  <form id="query-form" action="#{url_for_home}" method="GET" class="pure-form">
+
+    <div class="inputs">
+
+
+
+        <input type="text" id="q" name="q" value="$!esc.html($params.get('q'))"/>
+        <input type="submit" id="querySubmit" class="pure-button" value="Suchen"/>
+
+
+  </div>
+
+    #if($request.params.get('debugQuery'))
+      <input type="hidden" name="debugQuery" value="true"/>
+    #end
+    #if($annotate == true)
+      <input type="hidden" name="annotateBrowse" value="true"/>
+    #end
+
+
+    #if($request.params.get('sort'))
+      <input type="hidden" name="sort" value="$request.params.get('sort')"/>
+    #end
+
+      #fqs_form()
+
+    #additional_params_form_nop(['hl.q'])
+
+    #if($currenttopicname && $currenttopicname.length() > 10 && !$currenttopicname.startsWith("topic_"))
+     #set($hl_query  = $currenttopicname.substring(5).replace("[", "").replace(",", "").replace("]",""))
+    #end
+    <input type="hidden" name="topic_highlightquery" value="$!hl_query"/>
+
+ <div class="parsed_query_header">
+      #if($request.params.get('debugQuery'))
+        <a href="#" onclick='jQuery(this).siblings("div").toggle(); return false;'>toggle parsed query</a>
+        <div class="parsed_query" style="display:none">$response.response.debug.parsedquery</div>
+      #end
+      #set($queryOpts = $request.params.get("queryOpts"))
+      #if($queryOpts && $queryOpts != "")
+        <input type="hidden" name="queryOpts" value="$queryOpts"/>
+      #end
+    </div>
+ <div class="statsonquery">
+#parse('query_stats.vm')
+</div>
+  </form>
+
+
+
+   ##parse('did_you_mean.vm')
+
+    #parse('constraints.vm')
+
+</div>
+

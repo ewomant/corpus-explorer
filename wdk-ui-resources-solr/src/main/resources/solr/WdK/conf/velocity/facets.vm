@@ -1,0 +1,22 @@
+#**
+ *  Overall Facet display block
+ *  Invokes the 4 facet and 1 cluster template
+ *#
+#parse('stats_categories_button.vm')
+<h1>Ergebnisse filtern:</h1>
+<div id="facetsettings">
+
+      				Anzeige:	<a href="#" id="FacetsAbsBut">Seitenzahl</a> |
+				<a href="#" id="FacetsRelBut">% der Ergebnisse</a>
+</div>
+
+#parse('facet_queries.vm')
+
+
+##parse('facet_customdate.vm')
+#parse('facet_ranges.vm')
+#parse('facet_fields.vm')
+
+
+#parse('facet_pivot.vm')
+##parse('cluster.vm')

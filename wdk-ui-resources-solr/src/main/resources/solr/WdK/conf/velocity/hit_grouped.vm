@@ -1,0 +1,43 @@
+#**
+ *  Display grouped results
+ *#
+
+#*
+<lst name="grouped">
+	<lst name="document">
+		<int name="matches">520596</int>
+			<arr name="groups">
+				<lst>
+					<int name="groupValue">1208</int>
+					<result name="doclist" numFound="1273" start="0" maxScore="1.0">
+						<doc>
+							<str name="id">1208_00001238</str>
+							<arr name="goobi_Author.firstName"><str>Friedrich</str></arr>
+*#
+#set($countdocs =  $current_page_start+1)
+
+
+  	   ##to page num_results
+
+  <div class="grouplist">  ## list of groups
+ 
+#foreach ($group in $response_grouped_document.groups)
+  #if($group.groupValue)
+   
+     ##parse book and first page
+     <div class="result-document">
+      
+      #set($render = "books_grouped")
+      #set($doc = $group.doclist[0])
+      
+      #parse("page_doc.vm")
+     
+	 
+	</div>  ## end of div class=result-document
+	 #set($countdocs =  $countdocs + 1)
+  #else<i>No group</i>
+  #end
+#end  ## end of foreach group in grouping.value.groups
+  </div>  ## div tag for entire list of groups
+
+

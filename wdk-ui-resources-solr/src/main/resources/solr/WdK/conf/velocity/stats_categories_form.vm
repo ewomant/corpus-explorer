@@ -1,0 +1,116 @@
+##facet.pivot split at ,, facet_pivot_1 und facet_pivot_2
+
+
+#set( $statsfacets = [])
+#foreach($field in $response.facetFields)
+    #set($success = $statsfacets.add($field.name))
+#end
+
+#set($success = $statsfacets.addAll($additional_statsfacets))
+#set($success = $statsfacets.add($timefacet))
+##facet_pivot_1: $facet_pivot_1 - facet_pivot_2:$facet_pivot_2
+
+<div id="statsdialogue_categories" class="statsdialogue" title="Statistik f&uuml;r Gruppen">
+
+    <form class="pure-form" action="#{url_for_solr}/browse" method="get">
+        #if($facet_pivot_2)
+            #set($selected_for_pivot_2 = $facet_pivot_2)
+            #elseif($statsfacets.size() > 1)
+                #set($selected_for_pivot_2 = $statsfacets[1])
+        #end
+
+        #if($facet_pivot_1)
+            #set($selected_for_pivot_1 = $facet_pivot_1)
+        #elseif($statsfacets.size() > 2)
+            #set($selected_for_pivot_1 = $statsfacets[2])
+        #end
+
+        <fieldset>
+            <label class="pure-input-1-3" for="stats_cat_col">Vergleiche: </label>
+            <select name="facet_pivot_2" id="stats_cat_col">
+                #foreach($field in $statsfacets)
+                    <option
+                        #if($selected_for_pivot_2.equals($field)  )selected#{end}
+                            value="$field">#displayfacetname($field)</option>
+                #end
+            </select>
+
+            <label class="pure-input-1-3" for="stats_cat_rows">gruppiert nach: </label>
+
+            <select id="stats_cat_rows" name="facet_pivot_1">
+                #set( $success = $statsfacets.add(0,$timefacet_grouped))
+
+                #foreach($field in $statsfacets)
+$field $timefacet_grouped $range_pivot<br/>
+                    <option #if( ($selected_for_pivot_1.equals($field) && ! $range_pivot) || ($timefacet_grouped.equals($field) && $range_pivot) )selected#{end} value="$field">#displayfacetname($field)</option>
+                #end
+            </select>
+
+            <label for="rel_values"> <input #if($rel_values) checked="checked" #end type="checkbox" id="rel_values" name="rel_values"/>
+                 Relative Werte</label>
+                &nbsp;
+
+            <label for="top_entries_max">Top-Abweichungen anzeigen:
+                <select name="top_entries_max" id="top_entries_max">
+
+                #foreach($option in [0,3,5,10])
+                    <option #{if}($top_entries_max==$option)selected#end>$option</option>
+                #end
+
+            </select>
+                </label>
+
+
+            &nbsp;
+           #* #if($facet_pivot_1.equals($timefacet))
+                <label for="no_range_pivot"> <input #if($no_range_pivot.equals("on")) checked="checked" #end type="checkbox" id="no_range_pivot" name="no_range_pivot"/> #displayfacetname($facet_pivot_1) nicht gruppieren</label>
+            #end##set selected if pivot_2 = $timefacet
+            *#
+
+            <script>
+                var stats_categories_form_config = {
+                            add_facet_fields : ['$timefacet'
+                                #foreach($facet in $additional_statsfacets)
+                                    ,'$facet'
+                                #end
+                                ],
+                            range_facets : {'${timefacet_grouped}': '$timefacet'}
+                }
+            </script>
+
+        <input type="hidden" name="facet.pivot" value=""/>
+
+        #q_form()
+
+        #fqs_form()
+
+        <input type="hidden" name="v.template" value="statsview_categories"/>
+
+            <input type="hidden" name="rows" value="0"/>
+            <input type="hidden" name="facet.limit" value="200"/>
+            <input type="hidden" name="facet.pivot.mincount" value="1"/>
+
+
+            #foreach($additional_statsfacet in $additional_statsfacets)
+                #if($facet_pivot_2.equals($additional_statsfacet) || $facet_pivot_1.equals($additional_statsfacet))
+                    ##<label for="facet.limit.$additional_statsfacet"> Anzahl #displayfacetname($additional_statsfacet):</label>
+                   <select name="f.${additional_statsfacet}.facet.limit">
+                    #foreach($number in $termnumbers_stats)
+                        <option #if($params.get("f.${additional_statsfacet}.facet.limit")==$number) selected #end>$number</option>
+                    #end
+                   </select>
+
+
+                    #end
+        #end
+
+
+        ##additional_params_form_nops($statswithoutparams )
+
+            <button type="submit" class="pure-button pure-button-primary">Berechnen</button>
+
+        </fieldset>
+
+
+    </form>
+</div>

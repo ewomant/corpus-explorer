@@ -1,0 +1,112 @@
+
+
+
+#set( $topicnames = {})
+#set( $topiccounts = {})
+#set($count = 0)
+
+#foreach($topicprefix in $topicmodelprefixes)
+    #set($topicfield = $topicmodelprefixes[$count]+$topicmodelfieldsuffix)
+    #set ($topicvalues = $response.getFacetField($topicfield).getValues())
+
+    #set( $arr = [0..$topicmodelcounts[$count]] )
+
+    #foreach( $i in $arr )
+        #set ($topic_short = $topicmodelprefixes[$count]+"${i}" )
+        #set ($topicname = false)
+        #set ($topiccount = 0)
+            ##ueberpruefen, ob Topicname in Facetvalues enthalten ist
+            #foreach($topicvalue in $topicvalues)
+
+
+                #if($topicvalue.getName().startsWith("T${i}:"))
+                    #set ($topicname = $topicvalue.getName())
+                    #set ($topiccount = $topicvalue.getCount())
+
+                     #if($curr_topic_short  ==  $topic_short)
+                        #set($currenttopicname = $topicname)
+                        #set( $curr_selecetedtopic =  [$curr_topic_short, $currenttopicname, $topicmodelprefixes[$ctm]] )
+                     #end
+                #end
+            #end
+            #if($topicname)
+                #set($topicnames[$topic_short] = $topicname.trim())
+            #else
+                #set($topicnames[$topic_short] = $topicvalue.trim())
+            #end
+        #if($topiccount)
+            #set($topiccounts[$topic_short] = $topiccount)
+        #end
+    #end
+    #set($count = $count+1)
+#end
+
+#macro(displaytopicmodelname $topic_short)
+#set ($this_topicname = false)##
+###topicmodel ermitteln##
+#set($this_i = 0)##
+#foreach($topicprefix in $topicmodelprefixes)
+#if( $topic_short.startsWith($topicprefix))
+#set($this_topicname = $topicmodelnames[$this_i])##
+#end#set($this_i = $this_i+1)##
+#end
+#if($this_topicname)$this_topicname.trim()#else$topic_short#end
+#end
+
+#macro(topicmodelfield $topic_short)
+    #foreach($topicprefix in $topicmodelprefixes)
+        #if( $topic_short.startsWith($topicprefix))$topicprefix$topicmodelfieldsuffix#end
+    #end
+#end
+
+#macro(displaytopicname $topic_short)
+    #if($topicnames[$topic_short])
+        $topicnames[$topic_short]
+    #else
+        $topic_short
+    #end
+#end
+
+#macro(istopicfilter $topicshort)
+#set ($tm = "false")##
+#foreach($topicprefix in $topicmodelprefixes)
+#if($topicshort.startsWith($topicprefix) && ! $topicshort.endsWith($topicmodelfieldsuffix) )##
+#set($tm = "true")##
+#end
+#end$tm##
+#end
+
+
+#macro(rangefilter_upperend $fq)#set($fromto = $fq.split("\[|\sTO\s|\]"))$fromto[0]#end
+
+#set($showtopics = [])
+#foreach($show_topic in $params.getParams('show_topic'))
+        #set($success = $showtopics.add($show_topic))
+#end
+
+
+#if(!$showtopics.isEmpty())
+    #set($i = 0)
+
+##nach topic sortieren
+##	tm aus sort
+    #foreach($topicprefix in $topicmodelprefixes)
+        #if( $curr_topic_short.startsWith($topicprefix))
+            #set($ct   = $curr_topic_short.replace($topicprefix, "")) ##topicnummer angeben
+            #set($ctm = $i)
+        #end
+        #set($i = $i+1)
+    #end
+
+    #set($i = 0)
+    #if($selectedtopicmodel) ##anderes topicmodel mit select gewaehlt
+    ##	neues tm
+        #foreach($topicprefix in $topicmodelprefixes)
+            #if( $selectedtopicmodel == $topicprefix)
+                #set($ctm = $i)
+            #end
+            #set($i = $i+1)
+        #end
+    #end
+#end
+

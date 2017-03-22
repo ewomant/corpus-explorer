@@ -1,0 +1,57 @@
+## http://localhost:8983/solr/WdK.dev/browse?&fl=*%2Cscore&rows=10&q=id:%221642_00000028%22&mlt=true&v.template=browse_docs
+<div class="mlt">
+    #set($mlt = $mltResults.get($docId))
+
+    <h2>&Auml;hnliche Ergebnisse</h2>
+    #set( $mlt_minScore = 0.1 *  $mlt.maxScore )
+    #if( $request.params.get('mlt.fl'))
+        #set( $mlt_fl = $request.params.get('mlt.fl'))
+        #else
+            #set( $mlt_fl =  "text")
+    #end
+  ##problem unterschiedliche Tresholds fuer Felder?
+   #* #if( $mlt_fl ==  "text")
+        <a class="mltDistributionLink" href="#url_for_home?q={!mlt+fl=$mlt_fl+mintf%3D1+mindf%3D1}${docId}&fq={!frange+l%3D$mlt_minScore}{!mlt+fl=$mlt_fl+mintf%3D1+mindf%3D1}$docId" target="_blank">Verteilung der Ergebnisse mit mindestens 10% des Score des Originaldokumentes</a>
+    #end*#
+
+    <form action="#url_for_home"" method="get" class="pure-form numbermlt">
+
+    #q_form()
+    <input type="hidden" name="mlt" value="true"/>
+
+
+    #*
+    #foreach($fq in $request.params.getParams('fq'))
+        #if ($fq != "{!bbox}")
+            <input type="hidden" name="fq" id="allFQs" value="$esc.html($fq)"/>
+        #end
+
+    #end*#
+
+    #additional_params_form_nops(['rows', 'q', 'rows', 'qf', 'mlt'])
+
+    <div class="pure-control-group">
+        <label class="pure-input-1-3" for="mlt.count">Maximale Anzahl Ergebnisse:</label>
+        <input type="number" name="mlt.count" value="#if($mlt.count)$mlt.count#{else}20#end"/>
+        <input type="submit" name="" value="Ok" class="pure-button"/>
+    </div>
+    <div>Felder f&uuml;r Vergleich: $mlt_fl</div>
+    <input type="hidden" name="v.template" value="browse_docs"/>
+    </form>
+
+
+
+    #if ($mlt.size() > 0)
+        #set($countdocs =  1)
+
+        #foreach($mltHit in $mlt)
+            #set($doc = $mltHit)
+            #parse("hit.vm")
+            #set($countdocs =  $countdocs +1)
+        #end    ## end for each mltHit in $mlt
+
+    ## Else MLT Enabled but no mlt results for this query
+    #elseif($mltOn && $mlt.size() == 0)
+        <div>Keine &auml;hnlichen Ergebnisse</div>
+    #end
+</div>  ## div class=mlt

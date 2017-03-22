@@ -1,0 +1,407 @@
+#**
+ *  Global macros used by other templates.
+ *  This file must be named VM_global_library.vm
+ *  in order for Velocity to find it.
+ *#
+
+#macro(param $key)$request.params.get($key)#end
+
+#macro(url_root)/solr#end
+
+## TODO: s/url_for_solr/url_for_core/ and s/url_root/url_for_solr/
+#macro(core_name)$request.core.name#end
+
+#macro(url_for_solr)#{url_root}()#if($request.core.name != "")/$request.core.name#end#end
+
+#macro(url_for_home)#{url_for_solr}()/browse#end
+
+
+
+#macro(q)&q=$!{esc.url($params.get('q'))}#end
+
+#macro(fqs $p)#foreach($fq in $p)#if($velocityCount>1)&#{end}fq=$esc.url($fq)#end#end
+
+
+#macro(createFQ $field, $value)#createTag($field)#createFQ_noTag($field, $value)#end
+
+#macro(createFQ_multi $field, $values)#createTag($field)#foreach($value in $values)#if($value==$missing_value)(-$esc.url($field):$missing_value_range)#else$field:%22$value%22#end#if($velocityHasNext)+OR+#end#end#end
+
+
+
+#macro(createFQ_noQ $field, $value)#createTag($field)#createFQ_noQ_noTag($field, $value)#end
+#macro(createFQ_noTag $field, $value)$esc.url($field):%22$esc.url($value)%22#end
+#macro(createFQ_noQ_noTag $field, $value)$esc.url($field):$esc.url($value)#end
+#macro(createTag $field)$esc.url("{!tag=$field}")#end
+
+#macro(createFQ_forFilterType_tagged $filter)#if($fq.type == 'predefined')#createTag($fq['field'])$esc.url($fq.value)#elseif($fq.type == 'junkfilter')$esc.url($fq.value)#elseif($fq.type=='range')#createFQ_noQ($fq['field'], $fq['value'])#else#createFQ($fq['field'], $fq['value'])#end#end
+
+#macro(createFQ_forFilterType_untagged $filter, $tagged)#if($fq.type == 'predefined' || $fq.type == 'junkfilter')$esc.url($fq.value)#elseif($fq.type=='range')#createFQ_noQ_noTag($fq['field'], $fq['value'])#else#createFQ_noTag($fq['field'], $fq['value'])#end#end
+
+#macro(fqs_tagged)#foreach($fq in $selected_filter_queries)#if($velocityCount>1)&#{end}fq=#createFQ_forFilterType_tagged($fq)#end#end
+
+#macro(fqs_untagged)#foreach($fq in $selected_filter_queries)#if($velocityCount>1)&#{end}fq=#createFQ_forFilterType_untagged($fq)#end#end
+
+
+#macro(fqs_ncf_old $p $cf)#foreach($fq in $p)#if(!$fq.startsWith($cf))&fq=$esc.url($fq)#{end}#end#end
+
+
+#macro(fqs_ncf $p $cf)#foreach($fq in $p)#set($fq_withoutTag="#removeTag($fq)")#if(!($fq_withoutTag.startsWith("${cf}:")) &&
+                                                                        !($fq_withoutTag.startsWith("-${cf}:")) &&
+                                                                        !($fq_withoutTag.startsWith("(-${cf}:")) &&
+                                                                        !($fq_withoutTag.startsWith("${cf}${unique_option_suffix}:")) &&
+                                                                        !($fq_withoutTag.equals(${cf})))&fq=$esc.url($fq)#{end}#end#end
+
+#macro(fq_ifexists $fq)#foreach($apv in $request.params.getParams('fq'))#if($apv.startsWith("$fq:"))&fq=$esc.url($apv)#end#end#end
+
+#macro(fq_exists $fq)#foreach($apv in $request.params.getParams('fq'))#if($apv.startsWith("$fq:"))true#end#end#end
+
+
+#macro(debug)#if($request.params.get('debugQuery'))&debugQuery=true#end#end
+
+#macro(boostPrice)#if($request.params.get('bf') == 'price')&bf=price#end#end
+
+#macro(annotate)#if($request.params.get('annotateBrowse'))&annotateBrowse=true#end#end
+
+#macro(annTitle $msg)#if($annotate == true)title="$msg"#end#end
+
+#macro(spatial)#if($request.params.get('sfield'))&sfield=store#end#if($request.params.get('pt'))&pt=$request.params.get('pt')#end#if($request.params.get('d'))&d=$request.params.get('d')#end#end
+
+#macro(qOpts)#set($queryOpts = $request.params.get("queryOpts"))#if($queryOpts && $queryOpts != "")&queryOpts=$queryOpts#end#end
+
+#macro(group)#if($request.params.getBool("group") == true)&group=true#end#if($request.params.get("group.field"))#foreach($grp in $request.params.getParams('group.field'))&group.field=$grp#end#end#end
+
+#macro(sort $p)#if($p)#foreach($s in $p)&sort=$esc.url($s)#end#end#end
+
+#macro(sortparams)#sort($request.params.getParams('sort'))#end
+
+#macro(template)#if($request.params.getParams('v.template'))&v.template=$esc.url($request.params.getParams('v.template')[0])#end#end
+
+#macro(additional_params)#foreach($ap in $additional_params)#foreach($apv in $request.params.getParams($ap))&${ap}=$esc.url($apv)#end#end#if($request.params.getParams('textfs'))#{textfacets}()#end#end
+
+#macro(add_params $parameters)#foreach($ap in $parameters)#foreach($apv in $request.params.getParams($ap))&${ap}=$esc.url($apv)#end#end#if($request.params.getParams('textfs'))#{textfacets}()#end#end
+
+
+#macro(lensNoQ)?#if($request.params.getParams('fq') and $list.size($request.params.getParams('fq')) > 0)&#fqs($request.params.getParams('fq'))#end#{sortparams}()#spatial()#qOpts()#additional_params()#debug()#annotate()#end
+
+#macro(lensNoQ_tagged)?#if($request.params.getParams('fq') and $list.size($request.params.getParams('fq')) > 0)&#fqs_tagged()#end#{sortparams}()#spatial()#qOpts()#additional_params()#debug()#annotate()#end
+
+#macro(lensNoQ_untagged)?#if($request.params.getParams('fq') and $list.size($request.params.getParams('fq')) > 0)&#fqs_untagged()#end#{sortparams}()#spatial()#qOpts()#additional_params()#debug()#annotate()#end
+
+#macro(lensNoS)?#{q}()#if($request.params.getParams('fq') and $list.size($request.params.getParams('fq')) > 0)&#fqs($request.params.getParams('fq'))#end#{spatial}()#{qOpts}()#{additional_params}()#{debug}()#{annotate}()#end
+
+#macro(lens)#lensNoQ()#q()#end
+
+#macro(textfacets)#foreach($f in $text_facets)&facet.field=$f#end#end
+
+#macro(lens_No_CurrentFQ $currFQ)#set($lens = "#lensNoQ()#q()")#set($lens = $lens.replace("&fq=$currFQ", ''))$lens#end
+
+#macro(lens_No_Key_Value $key $value)#set($lens = "#lensNoQ()#q()")#set($lens = $lens.replaceAll("&$key=$value", ''))$lens#end
+
+#macro(lens_without_P $param)#set($lens = "#lensNoQ()#q()")#foreach($p in $param)#set($lens = $lens.replaceAll("&$p(\=[^&]*)?(?=&|${esc.d})|^$p(\=[^&]*)?(&|${esc.d})", ''))#end$lens#end
+
+#macro(lens_without_P_tagged $param)#set($lens = "#lensNoQ_tagged()#q()")#replace_params($lens, $param)#end
+
+#macro(lens_without_P_untagged $param)#set($lens = "#lensNoQ_untagged()#q()")#replace_params($lens, $param)#end
+
+#macro(replace_params $lens $param)#foreach($p in $param)#set($lens = $lens.replaceAll("&$p(\=[^&]*)?(?=&|${esc.d})|^$p(\=[^&]*)?(&|${esc.d})", ''))#end$lens#end
+
+#macro(lens_No_CurrentFQ_without_P $currFQ $params)#set($lens = "#lens_No_CurrentFQ(${currFQ})")#foreach($p in $params)#set($lens = $lens.replaceAll("&$p\=[^&]+", ''))#end$lens#end
+
+
+
+
+#macro(params_form_facet_fields)
+    #if($request.params.getParams('textfs'))
+        #foreach($tf in $text_facets)
+        <input type="hidden" name="facet.field" value="$esc.html($tf)"/>
+        #end
+    #end
+#end
+
+#macro(params_form $params)
+	#foreach($ap in $params)
+		#foreach($apv in $request.params.getParams($ap))
+	      <input type="hidden" name="${ap}" value="$esc.html($apv)"/>
+		#end
+	#end
+#end
+
+#macro(fqs_form)
+    #foreach($fq in $request.params.getParams('fq'))
+        #if ($fq != "{!bbox}")
+        <input type="hidden" name="fq" value="$esc.html($fq)"/>
+        #end
+    #end
+#end
+
+#macro(q_form)
+    #if($request.params.get('q')&& $request.params.get('q') !="")
+    <input type="hidden" name="q" value="$esc.html($request.params.get('q'))"/>
+    #end
+#end
+
+#macro(additional_params_form)
+	#params_form( $additional_params)
+    #{params_form_facet_fields}()
+#end
+
+
+
+#macro(additional_params_form_nop $nop)
+	#foreach($ap in $additional_params)
+		#if($nop != $ap)
+			#foreach($apv in $request.params.getParams($ap))
+		      <input type="hidden" name="${ap}" value="$esc.html($apv)"/>
+			#end
+		#end
+	#end
+
+    #if($request.params.getParams('textfs') && $nop != 'textfs')
+        #{params_form_facet_fields}()
+    #end
+#end
+
+#macro(additional_params_form_nops $nops)
+
+	#set($additional_params_local = [])
+	#foreach($ap in $additional_params)
+		#set($keep = true)
+		#foreach($nop in  $nops)
+			#if($nop == $ap)
+					#set($keep = false)
+			#end
+		#end
+		#if($keep)
+			#set($void= $additional_params_local.add($ap))
+		#end
+	#end
+
+
+	#params_form($additional_params_local)
+
+    #set($textfs = true)
+    #foreach($nop in  $nops)
+        #if($nop == "textfs")
+            #set($textfs = false)
+        #end
+    #end
+
+    #if($request.params.getParams('textfs') && $textfs)
+        #{params_form_facet_fields}()
+    #end
+#end
+
+#macro(url_for_lens)#{url_for_home}()#{lens}()#end
+
+#macro(url_for_start $start)#url_for_home()#lens()&start=$start#template()#end
+
+#macro(url_for_filters $p)#url_for_home()?#q()#if($list.size($p) > 0)&#fqs($p)#end#sortparams()#spatial()#qOpts()#additional_params()#debug()#annotate()#end
+
+
+##TODO: Setup to use parsed filters from $selected_filter_queries
+#macro(url_for_filters_no_current $cf)#set($p = $request.params.getParams('fq') )##
+#url_for_home()?#q()#if($list.size($p) > 0)#fqs_ncf($p, $cf)#end#sortparams()#spatial()#qOpts()#additional_params()#debug()#annotate()#end
+
+#macro(url_for_nested_facet_query $field)#url_for_home()#lens()&fq=$esc.url($field)#end
+
+#macro(url_no_curfq $field)#url_for_home()#lens_No_CurrentFQ($field)#end
+
+#macro(url_for_nested_facet_query2 $field)#url_no_curfq($field)&fq=$field#end
+
+#macro(url_for_nested_facet_query2_tagged $filterquery, $field)#url_for_filters_no_current($field)&fq=$esc.url("{!tag=$field}")$filterquery#end
+
+#macro(url_for_facet_filter $field $value)#url_for_home()#lens()&fq=$esc.url($field):%22$esc.url($value)%22#end
+
+##todo multiselect: url_for_facet_filter_multi($field $values)
+##always remove nUniqueValue #set($nUniqueFacet = "${field.name}${unique_option_suffix}")
+#macro(url_for_facet_filter_multi $field $values)#url_for_filters_no_current($field)#if($values.size() >0)&fq=#createFQ_multi($field, $values)#end#end
+
+#macro(url_for_facet_filter2 $field $value)#url_for_filters_no_current($field)&fq=#createFQ($field, $value)#end
+
+#macro(url_for_facet_filter_missing $field)#url_for_filters_no_current($field)&fq=$esc.url("{!tag=$field}")-$esc.url($field):$esc.url($missing_value_range)#end
+
+
+
+#macro(url_for_facet_date_filter $field $value)#url_for_home()#lens()&fq=$esc.url($field):$esc.url($value)#end
+
+#macro(url_for_facet_range_filter $field $value)#url_for_home()#lens()&fq=$esc.url($field):$esc.url($value)#end
+
+#macro(url_for_facet_range_filter2 $field $value)#url_for_filters_no_current($field)&fq=$esc.url("{!tag=$field}")$esc.url($field):$esc.url($value)#end
+
+#macro(facetbar $count)<span style="width:#{calc_relative_results}($count)" class="facetbar"></span>#end
+
+#macro(removeTag $fq)$fq.replaceFirst("\{!tag=[^\}]*\}", "")#end
+#macro(removeTags $fq)$fq.replace("\{!tag=[^\}]*\}", "")#end
+#macro(removeEx $fq)$fq.replaceFirst("\{!ex=[^\}]*\}", "")#end
+
+#macro(link_to_page $page_number $text)
+  #if($page_number == $current_page_page_number)
+    $text
+  #else
+    #if($page_number <= $current_page_page_count)
+      #set($page_start = $page_number * $current_page_results_per_page - $current_page_results_per_page)
+      <a class="page" href="#url_for_start($page_start)">$text</a>
+    #end
+  #end
+#end
+
+
+
+
+
+## $pivots is a list of facet_pivot
+#macro(display_facet_pivot $pivots, $display)
+  #if($pivots.size() > 0)
+  <h2 id="facetbox_queryfacet"  class="facet-field" #annTitle("Facets generated by adding &facet.pivot= to the request")>
+  Pivot Facets
+</h2>
+    <ul class="collapsible">
+      #foreach ($pivot in $pivots)
+        #foreach ($entry in $pivot.value)
+          <a href="#url_for_facet_filter($entry.field, $entry.value)">$entry.field::$entry.value</a> ($entry.count)
+          <ul>
+            #foreach($nest in $entry.pivot)
+              <a href="#url_for_facet_filter($entry.field, $entry.value)&fq=$esc.url($nest.field):%22$esc.url($nest.value)%22">$nest.field::$nest.value</a> ($nest.count)
+            #end
+          </ul>
+        #end
+      #end
+    </ul>
+  #end
+#end
+
+#macro(field $f)
+  #if($response.response.highlighting.get($docId).get($f).get(0))
+    #set($pad = "")
+    #foreach($v in $response.response.highlighting.get($docId).get($f))
+$pad$v##
+      #set($pad = " ... ")
+    #end
+  #else
+    #foreach($v in $doc.getFieldValues($f))
+$esc.html($v)##
+    #end
+  #end
+#end
+
+#macro(utc_date $theDate)
+$date.format("yyyy-MM-dd'T'HH:mm:ss'Z'",$theDate,$date.getLocale(),$date.getTimeZone().getTimeZone("UTC"))##
+#end
+
+#macro(format_value $val)
+#if(${val.class.name} == "java.util.Date")
+#utc_date($val)##
+#else
+$val##
+#end
+#end
+
+#macro(range_get_to_value $inval, $gapval)
+#if(${gapval.class.name} == "java.lang.String")
+$inval$gapval##
+#elseif(${gapval.class.name} == "java.lang.Float" || ${inval.class.name} == "java.lang.Float")
+$math.toDouble($math.add($inval,$gapval)))##
+#else
+$math.add($inval,$gapval)##
+#end
+#end
+
+#macro(range_get_to_value_year $inval, $gapval)
+    #if(${gapval.class.name} == "java.lang.String")
+        $inval$gapval##
+    #elseif(${gapval.class.name} == "java.lang.Float" || ${inval.class.name} == "java.lang.Float")
+        $math.toDouble($math.add($inval,$gapval,-1)))##
+    #else
+        $math.add($inval,$gapval,-1)##
+    #end
+#end
+
+
+#macro(formatp $val)
+    #set($val = $math.mul($val,100))##
+    #set($val = $math.toInteger($val))#if($val>0)$val%#{else}0%#end#end
+
+#macro(formatp2d $val)$String.format("%.2f", $math.mul($val,100))%#end
+
+#macro(formatp_sign $val)$String.format("%+d", $math.round($math.mul($val,100)))%#end
+
+#macro(formatp_abs $val)$math.abs($math.round($math.mul($val,100)))%#end
+
+
+
+#macro(relative_results $count)
+<span class="count c" title="#{calc_relative_results}($count)">$count</span><span class="count rc" title="$count">#{calc_relative_results}($count)</span>#end
+
+#macro(facetname $facetname)<span class="fn">$esc.html($facetname)</span>#end
+
+#macro(calc_relative_results $count)#set($per_results = $math.div($count, $current_page_results_found))#formatp($per_results)#end
+
+#macro(remove_brackets $text)
+$text.toString().replace('[', '').replace(']', '')
+#end
+
+#macro(join_strings $strings $seperator)#foreach($string in $strings)$string#if($velocityHasNext)$seperator#end#end#end
+
+#macro(displayfacetname $afieldname)
+#set($newfacetname = $afieldname)#set($i = 0)##
+#foreach ($facetkeyname in $facetkeynames)##
+	#if($afieldname.startsWith($facetkeyname))##
+	#set($newfacetname = $facetnames[$i])##
+#end
+	#set($i = $i+1)##
+#end
+#set($newfacetname = $facet_query_names[$newfacetname])#displayfacetrange("#displaytopicmodelname($newfacetname)")#end
+
+#macro(displayfacetrange $aFieldname)
+#if(($aFieldname.startsWith("[") || $aFieldname.startsWith("{")) && ($aFieldname.endsWith("]") || $aFieldname.endsWith("}") )&& $aFieldname.contains("TO"))##
+$aFieldname.substring(1, $math.sub($aFieldname.length(),1)).replaceFirst("TO", "-")#else$aFieldname#end##
+#end
+
+#macro(truncate $string, $length)#if($string.length() > $length)#set ($string = $string.substring(0,$length)+" ...") #end $string#end
+
+#macro(js_string $string)'${string}';#end
+
+#macro(filterFrom $range)
+#set($fromto = $range.split("\[|\sTO\s|\+TO\+|\]|\."))##
+#if($fromto.size() >2)##
+#if($fromto[2].length() <2)$fromto[2]0#else$fromto[2]#end
+#else
+0##
+#end##
+#end
+
+
+#macro(displaycurrentselection)
+ #set($currentQuery = $params.getParams('q'))
+  #if($params.getParams('fq') || ($currentQuery.size() > 0 &&  $currentQuery[0] != ''))
+    <div class="constraints" #annTitle("Lists out the &fq filters.  Click to remove.")>
+     Aktuelle Auswahl:
+      #if($currentQuery.size() > 0 &&  $currentQuery[0] != '')
+		<i>Anfrage:</i>$currentQuery[0]
+     #end
+   #if($params.getParams('fq'))
+      #foreach($fq in $params.getParams('fq'))
+        #set($previous_fq_count=$velocityCount - 1)
+        #set($facetName = $fq)
+        #if($fq != '')
+          #if($facet_query_names[$fq])
+          	#set($facetName = $facet_query_names[$facetName])##fuer predefined filter-queries - bleibt, wenn nicht vorhanden
+       	  #else
+         	 ##fq split an : , dann displayfacetname und zusammensetzen
+         	 #set($selection = $fq.split(":"))
+              #if($selection.size() > 1)
+                  #set($facetName = "<i>#displayfacetname($selection[0])</i>" + ":" + $selection[1])
+              #end
+
+          #end
+          &gt;&nbsp;$facetName
+        #end
+      #end
+    #end
+    </div>
+#end
+#end
+
+
+##create query
+#macro(solrjson_stats_url)#{url_for_solr}()/browse#{lensNoQ}()&q=${queryterms}&rows=0&stats=true&stats.facet=${timefacet}#end
