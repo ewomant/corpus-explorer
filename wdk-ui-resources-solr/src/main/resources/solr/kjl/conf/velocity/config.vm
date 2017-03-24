@@ -1,0 +1,168 @@
+
+
+#set($topicmodelprefixes = ["_"])
+#set($topicmodelnames = ["Keine Topicmodels vorhanden"])
+#set($topicmodelcounts = [0, 0])
+
+#set($defaultfilter = 'ntokens:[50 TO *] AND nsentences:[3 TO *] AND NOT(alphaCharsPerToken:[0 TO 1.71] OR alphabeticCharsRatio:[0 TO 0.71])')
+#set($facet_query_names = {$defaultfilter : 'min. 50 Worte, min. 3 S&auml;tze, geringer Anteil Sonderzeichen/Wort',
+    'ntokens:[50 TO *]':'Mindestens 50 Worteinheiten',
+    '-divType:(Addendum OR Advertising OR Appendix OR AttachedWork OR Bibliography OR Binder OR colourchart OR Cover OR Dedication OR Epilogue OR Errata OR Figure OR Frontispiece OR genealogicaltable OR IllustrationDescription OR Imprint OR Index OR IndexAuthor OR IndexLocation OR IndexOfChronology OR IndexPersons OR IndexSpecial OR IndexSubject  OR ListOfIllustrations OR ListOfMaps OR Map OR MultiVolumeWork OR OtherDocStrct OR panel OR Preface OR Prepage OR regentpanel OR Remarks OR Supplement OR Table OR TableOfAbbreviations OR TableOfContents OR TableOfLiteratureRefs OR TitlePage)'
+:'Medientypen filtern',
+    '{!frange l=5}div(ntokens,max(nsentences,1))':'Mindestens 5 Worteinheiten/Satz',
+    'nsentences:[3 TO *]': 'Mindestens 3 S&auml;tze',
+
+    'NOT(alphaCharsPerToken:[0 TO 1.71] OR alphabeticCharsRatio:[0 TO 0.47])':'Junk filtern (Anteil Sonderzeichen/Wort)',
+    'NOT(alphaCharsPerToken:[0 TO 1.71] OR alphabeticCharsRatio:[0 TO 0.71])':'Junk &amp; Listen Filtern (hoher Anteil Sonderzeichen)',
+    'Afz_wdk:[2 TO *]': 'Auflage 2 und h&ouml;her',
+    '-Afz_wdk:[2 TO *]': 'k.A. oder Auflage 1'
+
+})
+
+
+
+##easier to define a map first, and then derive names and keys as arrays? Could be used for easier lookup as well?
+#set($facetkeynames = ["kjl_PublicationYear_Est_norm_i",
+    'kjl_author_publisher_name_sm',
+					 "kjl_Titel_t",
+					"kjl_Verlag_s",
+					"kjl_Ort_sni",
+					"document",
+					"kjl_Ort_ersteAngabe_wdk_s",
+ 					"namedentities_per",
+ 					"namedentities_loc",
+					"namedentities_org",
+ 					"namedentities_misc",
+ 					"years",
+ 					"Afz_wdk",
+                    "page",
+                    'kjl_Krisendiskurs_s',
+                    'kjl_Repraesentativ_Moral_s',
+                    'kjl_Band_i',
+                    'kjl_Verbreitung_i',
+                    'kjl_Bemerkungen_sni',
+                    'kjl_Geschlecht_s',
+                    'kjl_Auflage_sni',
+                    'kjl_Seitenzahl_i',
+                    "text"
+])
+
+#set($facetnames = ["Erscheinungsjahr",
+                    'Autor, Herausgeber oder Institution',
+					"Titel",
+					"Verlag",
+					"Erscheinungsort",
+					"Werk",
+					"Erscheinungsort erste Angabe",
+                    "Extrahierte Personennamen",
+                    "Extrahierte Ortsnamen",
+                    "Extrahierte Organisationen",
+                    "Weitere extrahierte Benennungen",
+                    "Extrahierte Jahreszahlen",
+                    "Auflage",
+                    "Seite",
+					"Krisendiskurs?",
+					"Wie repr&auml;sentativ sind seine Aussagen f&uuml;r die moralischen Positionen der Zeit?",
+                    'Band',
+                    "Wie verbreitet war dieses Buch in seiner Zeit?",
+                    "Bemerkungen",
+                    "Klare Geschlechterzuordnung",
+                    "Auflage",
+                    "Anzahl Seiten",
+                    "Volltext (nicht gruppiert))"
+
+])
+#set($metadata_book = [
+	'kjl_author_publisher_name_sm',
+	'kjl_Auflage_sni',
+    'kjl_Band_i',
+    'kjl_Seitenzahl_i',
+    'kjl_Verbreitung_i',
+	'kjl_Geschlecht_s',
+	'kjl_Krisendiskurs_s',
+	'kjl_Repraesentativ_Moral_s',
+	'kjl_Bemerkungen_sni'
+])
+
+#set($text_facets = [
+    "text",
+    "namedentities_per",
+    "namedentities_loc"
+])
+
+##limits taht are offered to the users to choose form
+#set($termnumbers = [25, 50, 100, 500, 1000])
+#set($termfacets = [ "f.namedentities_per.facet.limit", "f.namedentities_loc.facet.limit", "f.text.facet.limit"])
+
+
+##for fields with multiValued="true" the need to select only results with only one specific value can arise.
+##for the facet.field Facets listed here, a Unique-Option is displayed while 0 or 1 of the facets are selected. The Unique-Options expects a second field which indexes the number of indexed terms and uses this to restrict the number of indexed terms.
+#set($add_facet_unique_option = [
+])
+
+##This is the suffic that needs to be added to a field-name to find the termcount-field used for the unique-Option named above.
+#set($unique_option_suffix = "_nDistinct")
+
+
+
+#set($timefacet = 'kjl_PublicationYear_Est_norm_i')
+#set($pagefield = 'page')
+#set($bookfield = 'document')
+#set($booktitlefield = 'kjl_Titel_t')
+#set($publicationplacefield = 'kjl_Ort_sni')
+#set($publisherfield = 'kjl_Verlag_s')
+#set($auflagenzahlfield = 'Afz_wdk')
+#set($groupfield = 'document')
+#set($authornamefield = 'kjl_author_publisher_name_sm')
+
+#set($textexport = 'text')
+
+##configuration of grouping option used for the statsview
+#set($timefacet_grouped = "${timefacet}_Jahrzehnte")
+#set($success = $facetkeynames.add($timefacet_grouped))
+#set($success = $facetnames.add("Erscheinungsjahr n. Jahrzehnten"))
+
+
+##these facets are offered in addition to active facets in the statsview
+#set($additional_statsfacets = [
+    "namedentities_per",
+    "namedentities_loc"
+])
+
+##these paramters are ususally added to all links and forms thoughout a sessionn if not overriden
+#set($additional_params = ["fl", "sf", "ct", "show_topic", "hl.q", "rows", "group", 'group.field', 'group.ngroups', 'group.facet', 'statsonquery', 'topicmodel', 'group_stats_field',"top_groups_no", "textfs"])
+
+
+
+##fqs($request.params.getParams('fq'))
+#set($link_base = "http://gei-digital.gei.de/viewer/!image/")
+#set($link_toc = "https://opac.lbs-braunschweig.gbv.de/DB=1/CMD?ACT=SRCHA&IKT=5026&SRT=YOP&TRM=")
+#set($link_targetname = "UB")
+
+#set($link_type_field = "") ##set to field used to discriminate linktype in linkmacro below
+
+
+#macro(makePageLink $identifier $pagenumber $linktype )
+    #makeBookLink( $identifier $pagenumber)
+#end
+
+#macro(makeBookLink $identifier $pagenumber )
+<a class="linkToSource" target="_blank" href="${link_toc}${identifier}">Suche Werk im OPAC der $link_targetname</a>
+
+#end
+
+##these are the params that are removed when creating the query-urls for the chart
+#set($statswithoutparams = ["rows", "hl.q", "facet.pivot", 'group','queryOpts','group.field','group.ngroups', 'group.facet' , 'facet.field', 'textfs'])
+
+
+##field value used internally as the value for an empty field-value
+#set($missing_value = "[keine Angabe]")
+##string to create filter retrieving all documents with empty field
+#set($missing_value_range = "[* TO *] *:*")
+
+##the field-value used with paramter ct (currentTopic) when topics are selected but no topic-stats should be displayed
+#set($noTopicParam = "__noTopic__")
+
+
+#set($core_version = "kjl_02")
+#parse("doc/core_${core_version}.vm")

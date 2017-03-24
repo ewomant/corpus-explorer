@@ -1,0 +1,24 @@
+##core 06_05
+#set($doc_core_created = "xx-01-2016")
+#set($doc_document_export_date = "15-10-2015")
+#set($doc_metadata_date = "xx-01-2016")
+
+#set($doc_tm_general = " ")
+
+#set($doc_core_short_description = "<em>Index-Version WdK_$core_version</em> enth&auml;lt  <br/>
+									$doc_tm_general")
+
+
+#set($doc_core_changes = "Added cleaned field for erscheinungsjahr as time dimension changed metadata names")
+
+
+
+##will be displayd next to topicmodels as a ?-Popup-Link
+
+#set($doc_tm_descriptions = {"topic_capitals_chapters_sentences_25_"  : "Nomen - basierend auf S&auml;tzen - LDA - 25 Topics",
+                             "topic_capitals_chapters_sentences_50_"  : "Nomen - basierend auf S&auml;tzen - LDA - 50 Topics",
+						     "topic_capitals_chapters_sentences_100_" : "Nomen - basierend auf S&auml;tzen - LDA - 100 Topics",
+						     "topic_capitals_chapters_sentences_200_" : "Nomen - basierend auf S&auml;tzen - LDA - 200 Topics",
+						      "topic_sentiws_t25_" : "Wertende Begriffe - LDA - 25 Topics"
+						     })
+

@@ -17,7 +17,7 @@
 
         <div class="topic_selector_tm" id="${topicmodelprefix}box">
             #set($topicmodelnumber = $topicmodelcounts[$tmnr_i]+1)
-          <h2 id="${topicmodelprefix}toggle" class="topic_selector_title">
+          <h2 id="${topicmodelprefix}toggle" class="topic_selector_title" title="$topicmodelnames[$tmnr_i]:  $doc_tm_descriptions[$topicmodelprefix]">
               <span class="tm_title">$topicmodelnames[$tmnr_i]</span> &dash;
               <span class="topiccount">$topicmodelnumber</span>
               <span class="topiccount_selected"></span></h2>

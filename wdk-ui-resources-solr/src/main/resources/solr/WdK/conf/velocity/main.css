@@ -5,6 +5,10 @@ body {
 
 }
 
+body.waiting * {
+    cursor: progress;
+}
+
 #content{
     position: relative;
     width: auto;

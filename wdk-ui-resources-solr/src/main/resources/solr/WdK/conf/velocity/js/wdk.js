@@ -1,6 +1,23 @@
 
 
+
+function resetWaiting(){
+    $('body').removeClass('waiting');
+    //$("body").css("cursor", "default");
+}
+$(window).bind("pageshow", function() {
+    resetWaiting();
+});
+
+
 $(document).ready(function() {
+
+
+    $('a').click(function(){
+       $('body').addClass('waiting');
+        //$("body").css("cursor", "progress");
+    });
+
 
     $(document).tooltip({
         show: {effect: "fadeToggle", duration: 800},
@@ -58,6 +75,8 @@ $(document).ready(function() {
 
     });
 
+
+
     $("h2.collapse-button").click(function () {
         //console.log('slide open/close');
         var next = jQuery(this).next(".collapsible");
@@ -85,6 +104,9 @@ $(document).ready(function() {
 
     var relativecount = localStorage["resultcount"];
     var span = jQuery(this);
+
+
+
     if (relativecount !== 'relative') {
         setFacetsAbsolute();
     } else {
@@ -94,11 +116,19 @@ $(document).ready(function() {
 
     $("#FacetsAbsBut").click(function () {
         setFacetsAbsolute();
+
     });
 
     $("#FacetsRelBut").click(function () {
         setFacetsRelative();
+        resetWaiting();
     });
+
+
+
+
+
+
 
 
     $("#customyear").submit(function (event) {
@@ -128,11 +158,13 @@ $(document).ready(function() {
     $(".filterbytopicpercent").on("input", function () {
         var filterform = jQuery(this).parent();
         jQuery(".filterSubmit", filterform).css('display', 'inline');
+        resetWaiting();
     });
 
     $(".filterbytopicpercent").click(function () {
         //console.log(jQuery(".info", $(this).parent()));
         jQuery(".info", $(this).parent()).remove();
+        resetWaiting();
     });
 
 
@@ -141,6 +173,7 @@ $(document).ready(function() {
     $(".selecttable").click(function (event) {
         event.preventDefault();
         selectElementContents(document.getElementById('statsviewtable'));
+        resetWaiting();
     });
 
     $("#sort_combobox").change(function (event) {
