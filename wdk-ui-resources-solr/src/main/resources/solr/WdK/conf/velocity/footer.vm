@@ -47,11 +47,16 @@
 #if($request.params.get('q') && $request.params.get('q') != "")
     #set($pagetitle = "$pagetitle - Anfrage: $esc.html($request.params.get('q'))")
 #end
-#if($params.getParams('fq'))
+#if($selected_filter_queries.size() > 0)
     #set($pagetitle = "$pagetitle - Filter: ")
-    #foreach($fq in $params.getParams('fq'))
-        #set($pagetitle = "$pagetitle " + $fq)
-        #end
+    #foreach($filter in $selected_filter_queries)
+        #if($filter.type == "predefined" || $filter.type == "junkfilter")
+            #set($pagetitle = "$pagetitle " + $filter['field'])
+        #else
+            #set($pagetitle = "$pagetitle " + $filter['field_name'])
+         #end
+    #end
+
 #end
 
 #if($currenttopicname )
