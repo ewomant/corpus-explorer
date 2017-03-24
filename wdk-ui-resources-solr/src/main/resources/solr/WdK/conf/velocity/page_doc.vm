@@ -249,11 +249,11 @@
     <div class="doc_links">
         #set($mlt_link_base = "#url_for_home?q=id:%22$docId%22&mlt=true&v.template=browse_docs&mlt.count=20&facet=false&fq=&mlt.fl=")
         &nbsp;&Auml;hnliche Ergebnisse:
-        <a href="${mlt_link_base}text" target="_blank">nach Inhalt</a> |
+        <a href="${mlt_link_base}text" target="_blank">nach allen Termen</a> |
         #*    <a href="${mlt_link_base}#foreach($topicmodelprefix in $topicmodelprefixes)${topicmodelprefix}${topicmodelfieldsuffix},#end" target="_blank">
         nach Top-Topics</a> |*#
             <a href="${mlt_link_base}#foreach($extracted_metadata_field in $extracted_metadata_fields)${extracted_metadata_field},#end" target="_blank">
-        nach enthaltenen Namen</a>
+        nach enthaltenen Personen- &amp; Ortsnamen</a>
 
     </div>
 

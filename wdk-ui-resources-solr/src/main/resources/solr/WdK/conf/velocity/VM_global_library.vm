@@ -330,7 +330,7 @@ $math.add($inval,$gapval)##
 
 
 #macro(relative_results $count)
-<span class="count c" title="#{calc_relative_results}($count)">$count</span><span class="count rc" title="$count">#{calc_relative_results}($count)</span>#end
+<span class="count c closed" title="#{calc_relative_results}($count)">$count</span><span class="count rc closed" title="$count">#{calc_relative_results}($count)</span>#end
 
 #macro(facetname $facetname)<span class="fn">$esc.html($facetname)</span>#end
 

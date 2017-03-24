@@ -13,10 +13,7 @@ $(window).bind("pageshow", function() {
 $(document).ready(function() {
 
 
-    $('a.sl').click(function(){
-       $('body').addClass('waiting');
-        //$("body").css("cursor", "progress");
-    });
+
 
 
     $(document).tooltip({
@@ -121,13 +118,15 @@ $(document).ready(function() {
 
     $("#FacetsRelBut").click(function () {
         setFacetsRelative();
-        resetWaiting();
     });
 
 
 
 
-
+    $('a.sl').click(function(){
+        $('body').addClass('waiting');
+        //$("body").css("cursor", "progress");
+    });
 
 
 

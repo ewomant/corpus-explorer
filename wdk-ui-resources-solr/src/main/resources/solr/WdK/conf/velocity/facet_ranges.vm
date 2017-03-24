@@ -40,7 +40,7 @@
         #set($field_active = true)
     #end
 
-<h2  id="facetbox_${fieldName}" class="facet-field#if($field_active) facet-field_active#end sl"> #displayfacetname($display)</h2>
+<h2  id="facetbox_${fieldName}" class="facet-field#if($field_active) facet-field_active#end"> #displayfacetname($display)</h2>
 
     #set($fromto = ["-1","$start","$end"])
 
@@ -102,7 +102,7 @@
     #if($between && $between != "" && $between > 0)
         #set($value = "[" + "#format_value($start)" + " TO " + "#format_value($end)" +  "]")
         #set($facetURL = "#url_for_facet_range_filter2($fieldName, $value)")
-        <li class="between facet facet-range sl">
+        <li class="between facet facet-range">
             #if(!$field_active)#facetbar($between)#end
 
             #if($field_active && $selected_filter_queries[$fieldName]['value'] == $value)
@@ -116,13 +116,13 @@
         #set($value = "[" + "#format_value($end)" + " TO *]")
         #set($facetURL = "#{url_for_facet_range_filter2}()$fieldName, $value)")
 
-        <li class="after facet facet-range sl">
+        <li class="after facet facet-range">
             #if(!$field_active)#facetbar($after)#end
 
             #if($field_active && $selected_filter_queries[$fieldName]['value'] == $value)
                 <a class="selected sl" href="#url_for_filters_no_current($fieldName)">#facetname("Nach #format_value($end)") #relative_results($after)</a>
             #else
-                <a href="$facetURL" class="sl">#facetname("Nach #format_value($end)") #relative_results($after)</a>
+                <a class="sl" href="$facetURL">#facetname("Nach #format_value($end)") #relative_results($after)</a>
             #end
 
 
@@ -136,27 +136,26 @@
 
 
 
-
 #macro(display_facet_range $field, $display, $fieldName, $start, $end, $gap, $before, $after)
 <h2  id="facetbox_${fieldName}" class="facet-field"> #displayfacetname($display)</h2>
 <ul  class="collapsible">
     #if($before && $before != "")
         #set($value = "[* TO " + "#format_value($start)" + "}")
         #set($facetURL = "#url_for_facet_range_filter($fieldName, $value)")
-        <li><a href="$facetURL">Less than #format_value($start)</a> ($before)</li>
+        <li><a class="sl" href="$facetURL">Less than #format_value($start)</a> ($before)</li>
     #end
     #foreach ($facet in $field)
         #set($rangeEnd = "#range_get_to_value($facet.key, $gap)")
         #set($value = "[" + $facet.key + " TO " + $rangeEnd + "}")
         #set($facetURL = "#url_for_facet_range_filter($fieldName, $value)")
         #if ($facetURL != '')
-            <li><a href="$facetURL">$facet.key - #format_value($rangeEnd)</a> ($facet.value)</li>
+            <li><a class="sl" href="$facetURL">$facet.key - #format_value($rangeEnd)</a> ($facet.value)</li>
         #end
     #end
     #if($end && $end != "" && $after > 0)
         #set($value = "[" + "#format_value($end)" + " TO *}")
         #set($facetURL = "#url_for_facet_range_filter($fieldName, $value)")
-        <li><a href="$facetURL">More than #format_value($end)</a> ($after)</li>
+        <li><a class="sl" href="$facetURL">More than #format_value($end)</a> ($after)</li>
     #end
 </ul>
 #end

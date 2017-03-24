@@ -6,7 +6,7 @@ body {
 }
 
 body.waiting * {
-    cursor: progress;
+    cursor: wait;!important;
 }
 
 #content{
@@ -1513,6 +1513,7 @@ body #content .checkbutton:active{
 }
 #content .facetoption{
     text-align:right;
+    margin: 1px 0;
 }
 
 body .ui-tooltip {

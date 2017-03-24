@@ -25,7 +25,6 @@
     '{!frange l=5}div(ntokens,max(nsentences,1))':'Mindestens 5 Worteinheiten/Satz',
     '-divType:(Addendum OR Advertising OR Appendix OR AttachedWork OR Bibliography OR Binder OR colourchart OR Cover OR Dedication OR Epilogue OR Errata OR Figure OR Frontispiece OR genealogicaltable OR IllustrationDescription OR Imprint OR Index OR IndexAuthor OR IndexLocation OR IndexOfChronology OR IndexPersons OR IndexSpecial OR IndexSubject  OR ListOfIllustrations OR ListOfMaps OR Map OR MultiVolumeWork OR OtherDocStrct OR panel OR Preface OR Prepage OR regentpanel OR Remarks OR Supplement OR Table OR TableOfAbbreviations OR TableOfContents OR TableOfLiteratureRefs OR TitlePage)'
 :'Medientypen filtern'
-
 })
 
 
@@ -124,8 +123,7 @@
 ##fields used for namedentities mlt-option
 #set($extracted_metadata_fields = [
     "namedentities_per",
-    "namedentities_loc",
-    "namedentities_org"
+    "namedentities_loc"
 ])
 
 ##facets to be activated as additional facets because of performance reasons. These facets are activeted by adding them to the url
