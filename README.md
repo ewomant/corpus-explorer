@@ -89,7 +89,7 @@ In all steps, the index' `schema.xml` must have defined all the fields.
 [IndexCsvMetadata](wdk-core-indexing/src/main/java/de/tudarmstadt/ukp/experiments/wdk/topicmodeling/indexing/wdk/IndexCsvmetadata.java) can be called again at a later stage to update an existing index with newly updated metadata from a CSV file. Fields that existing in that metadata file are overwritten (possibly with empty values), all other documents fields remain untouched.
 
 
-##WdK-Explorer Interface
+## WdK-Explorer Interface
 
 The server comes with an interface based on VelocityResponseWriter that augments results with comparative statistics,  vizualisations and links to the original collection: [wdk-ui-resources-solr](./wdk-ui-resources-solr/). Details of the prerequisites of a Solr-Installation for WdK-Explorer  are explained here with suggestions regarding where future changes to the index-structure need to be accomodated. 
 
