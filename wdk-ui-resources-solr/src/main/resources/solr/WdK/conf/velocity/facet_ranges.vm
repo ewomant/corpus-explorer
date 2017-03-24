@@ -40,7 +40,7 @@
         #set($field_active = true)
     #end
 
-<h2  id="facetbox_${fieldName}" class="facet-field#if($field_active) facet-field_active#end"> #displayfacetname($display)</h2>
+<h2  id="facetbox_${fieldName}" class="facet-field#if($field_active) facet-field_active#end sl"> #displayfacetname($display)</h2>
 
     #set($fromto = ["-1","$start","$end"])
 
@@ -78,9 +78,9 @@
 
                 #if($field_active && $selected_filter_queries[$fieldName]['value'] == $value)
 
-                    <a class="selected" href="#url_for_filters_no_current($fieldName)">#facetname("$facet.key - #format_value($rangeEnd)")#relative_results($facet.value)</a>
+                    <a class="selected sl" href="#url_for_filters_no_current($fieldName)">#facetname("$facet.key - #format_value($rangeEnd)")#relative_results($facet.value)</a>
                     #else
-                        <a href="$facetURL">#facetname("$facet.key - #format_value($rangeEnd)")#relative_results($facet.value)</a>
+                        <a class="sl" href="$facetURL">#facetname("$facet.key - #format_value($rangeEnd)")#relative_results($facet.value)</a>
                 #end
             </li>
         #end
@@ -93,22 +93,22 @@
         <li class="before facet facet-range">
             #if(!$field_active)#facetbar($before)#end
             #if($field_active && $selected_filter_queries[$fieldName]['value'] == $value)
-                <a class="selected" href="#url_for_filters_no_current($fieldName)">#facetname("Vor #format_value($start)")#relative_results($before)</a>
+                <a class="selected sl" href="#url_for_filters_no_current($fieldName)">#facetname("Vor #format_value($start)")#relative_results($before)</a>
             #else
-                <a href="$facetURL">#facetname("Vor #format_value($start)")#relative_results($before)</a> </li>
+                <a class="sl" href="$facetURL">#facetname("Vor #format_value($start)")#relative_results($before)</a> </li>
             #end
 
     #end
     #if($between && $between != "" && $between > 0)
         #set($value = "[" + "#format_value($start)" + " TO " + "#format_value($end)" +  "]")
         #set($facetURL = "#url_for_facet_range_filter2($fieldName, $value)")
-        <li class="between facet facet-range">
+        <li class="between facet facet-range sl">
             #if(!$field_active)#facetbar($between)#end
 
             #if($field_active && $selected_filter_queries[$fieldName]['value'] == $value)
-                <a class="selected" href="#url_for_filters_no_current($fieldName)">#facetname("Von #format_value($start) bis #format_value($end)")#relative_results($between)</a>
+                <a class="selected sl" href="#url_for_filters_no_current($fieldName)">#facetname("Von #format_value($start) bis #format_value($end)")#relative_results($between)</a>
             #else
-                <a href="$facetURL">#facetname("Von #format_value($start) bis #format_value($end)")#relative_results($between)</a>
+                <a class="sl" href="$facetURL">#facetname("Von #format_value($start) bis #format_value($end)")#relative_results($between)</a>
             #end
         </li>
     #end
@@ -116,13 +116,13 @@
         #set($value = "[" + "#format_value($end)" + " TO *]")
         #set($facetURL = "#{url_for_facet_range_filter2}()$fieldName, $value)")
 
-        <li class="after facet facet-range">
+        <li class="after facet facet-range sl">
             #if(!$field_active)#facetbar($after)#end
 
             #if($field_active && $selected_filter_queries[$fieldName]['value'] == $value)
-                <a class="selected" href="#url_for_filters_no_current($fieldName)">#facetname("Nach #format_value($end)") #relative_results($after)</a>
+                <a class="selected sl" href="#url_for_filters_no_current($fieldName)">#facetname("Nach #format_value($end)") #relative_results($after)</a>
             #else
-                <a href="$facetURL">#facetname("Nach #format_value($end)") #relative_results($after)</a>
+                <a href="$facetURL" class="sl">#facetname("Nach #format_value($end)") #relative_results($after)</a>
             #end
 
 

@@ -17,11 +17,11 @@
 
         #set($filter = $selected_filter_queries[$filterkey])
 
-        <a class="multi_facet_field multi_facet_field_selected" href="#url_for_filters_no_current($filter['field'])#if($filterkey == $defaultfilter && $request.params.getParams('fq').size() <= 1)&fq=#end"> $junkfilter[$filterkey]
+        <a class="multi_facet_field multi_facet_field_selected sl" href="#url_for_filters_no_current($filter['field'])#if($filterkey == $defaultfilter && $request.params.getParams('fq').size() <= 1)&fq=#end"> $junkfilter[$filterkey]
         </a>
 
     #else
-        <a class="multi_facet_field" href="$facetURL">
+        <a class="multi_facet_field sl" href="$facetURL">
           $junkfilter[$filterkey]
         </a>
 
@@ -110,7 +110,7 @@
                 #if($field_active)
                 ##if fq length <= 1 && facet_key = defaultkey append fq= for override
 
-                        <a class="facet-query selected" href="#url_for_filters_no_current($current_field)#if($facet.key.contains($defaultfilter) && $request.params.getParams('fq').size() <= 1)&fq=#end">
+                        <a class="facet-query selected sl" href="#url_for_filters_no_current($current_field)#if($facet.key.contains($defaultfilter) && $request.params.getParams('fq').size() <= 1)&fq=#end">
                             #facetname($facetName)#relative_results($facet.value)</a>
                 #else
 
@@ -119,7 +119,7 @@
                         ##facetbar($facet.value)
                     #end
                     #set($facetURL = "#url_for_nested_facet_query2_tagged($facetKey_escaped, $current_field)")
-                    <a class="facet-query" href="$facetURL">#facetname($facetName)#relative_results($facet.value)</a>
+                    <a class="facet-query sl" href="$facetURL">#facetname($facetName)#relative_results($facet.value)</a>
                 #end
 
             </li>

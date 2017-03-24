@@ -9,6 +9,7 @@
         #else
             #set( $mlt_fl =  "text")
     #end
+
   ##problem unterschiedliche Tresholds fuer Felder?
    #* #if( $mlt_fl ==  "text")
         <a class="mltDistributionLink" href="#url_for_home?q={!mlt+fl=$mlt_fl+mintf%3D1+mindf%3D1}${docId}&fq={!frange+l%3D$mlt_minScore}{!mlt+fl=$mlt_fl+mintf%3D1+mindf%3D1}$docId" target="_blank">Verteilung der Ergebnisse mit mindestens 10% des Score des Originaldokumentes</a>
@@ -35,7 +36,14 @@
         <input type="number" name="mlt.count" value="#if($mlt.count)$mlt.count#{else}20#end"/>
         <input type="submit" name="" value="Ok" class="pure-button"/>
     </div>
-    <div>Felder f&uuml;r Vergleich: $mlt_fl</div>
+
+
+    <p>Ähnliche Dokumente basierend auf den Feldern
+        #foreach($field in $params.get("mlt.fl").split(","))
+            <em>#displayfacetname($field)</em>
+        #end
+
+    </p>
     <input type="hidden" name="v.template" value="browse_docs"/>
     </form>
 

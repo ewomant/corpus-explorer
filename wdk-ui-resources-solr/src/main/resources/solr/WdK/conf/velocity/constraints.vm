@@ -17,9 +17,9 @@
                 #if(($velocityCount - $selected_topicfilters.size()) != 1)|#end##
 
                 #if($filter.type == "predefined" || $filter.type == "junkfilter")
-                    <a href="#url_for_filters_no_current($filter['field'])">$filter['field_name']</a>
+                    <a class="sl" href="#url_for_filters_no_current($filter['field'])">$filter['field_name']</a>
                 #else
-                    <a href="#url_for_filters_no_current($field)">$filter['field_name']</a>
+                    <a class="sl" href="#url_for_filters_no_current($field)">$filter['field_name']</a>
                 #end
 
             #end
@@ -48,7 +48,7 @@
 
                 #if($curr_topic_short && $curr_topic_short == $selection[0])#set($curr_selecetedtopic_filtered = true)#end
                 <li>
-                    <a href="#{url_no_curfq}($esc.url($fq))">#displaytopicmodelname($selection[0]): $topicfiltername</a>:
+                    <a class="sl" href="#{url_no_curfq}($esc.url($fq))">#displaytopicmodelname($selection[0]): $topicfiltername</a>:
                     <form class="filterbytopic" action="#{url_no_curfq}($esc.url($fq))" method="get">
                         <input type="text" size="2" value="#{filterFrom}($selection[1])" min="0" max="99" class="filterbytopicpercent" name="filterbytopicpercent">%
                         <input type="hidden" value="$esc.url($selection[0])" class="filterbytopictopic">

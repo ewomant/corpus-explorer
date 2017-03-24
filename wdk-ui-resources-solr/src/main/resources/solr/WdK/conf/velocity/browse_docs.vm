@@ -20,6 +20,14 @@
 
 #if($mltOn == true)
     <h2>&Auml;nliche Dokumente zu folgendem Trefferdokument</h2>
+
+
+    <p>Basierend auf den Feldern
+        #foreach($field in $params.get("mlt.fl").split(","))
+            <em>#displayfacetname($field)</em>
+        #end
+
+    </p>
     #set($pagetitle = "WdK-SimDocs: Ähnliche Dokumente für Anfragedokument: ")
 #else
     <h2>Dokumente f&uuml;r Auswahl</h2>
@@ -39,24 +47,29 @@
 
  #if($curr_sort_short)
    <p><em>Sortiert nach:</em>
-     #if($mltOn == true)&Auml;hnlichkeit zu Dokument
-   	#elseif($curr_topic_short)
+
+   	#if($curr_topic_short)
    		#displaytopicname($curr_sort_short)
    	#else
    		#displayfacetname($curr_sort_short)
    	#end
    	</p>
    #else
-   <p><em>Sortiert nach:</em> Relevanz zur Anfrage</p>
+     <p><em>Sortiert nach:</em>
+       #if($mltOn)&Auml;hnlichkeit zu Dokument
+       #else
+            Relevanz zur Anfrage#end
+     </p>
    #end
 
 
-#if($mltOn != true)
+#if(! $mltOn )
 <div class="pagination">
   #parse("pagination_top.vm")
 </div>
-#end
 
+
+#end
 ## Show Error Message, if any
 <div class="error">
   #parse("error.vm")
@@ -68,10 +81,10 @@
   #parse("results_list.vm")
 </div>
 
-
+  #if(! $mltOn )
 <div class="pagination_bottom">
   #parse("pagination_top.vm")
-#if($mltOn != true)
+
       #parse("export.vm")
     #end
 </div>

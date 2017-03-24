@@ -45,16 +45,16 @@
 
                     #if($selected_filter_queries[$nUniqueFacet])
 
-                        <a class="pure-button pure-button-active checkbuttonactive" href="#{url_for_filters_no_current}( $nUniqueFacet)">Eindeutiger Wert</a>
+                        <a class="pure-button pure-button-active checkbuttonactive sl" href="#{url_for_filters_no_current}( $nUniqueFacet)">Eindeutiger Wert</a>
                     #else
 
-                        <a class="pure-button checkbutton" href="#url_for_facet_filter2($nUniqueFacet, 1)">Eindeutiger Wert</a>
+                        <a class="pure-button checkbutton sl" href="#url_for_facet_filter2($nUniqueFacet, 1)">Eindeutiger Wert</a>
                     #end
                     </li>
                 #end
 
                 #if($field_active)
-                    <li class="facetoption"><a  class="pure-button" href="#{url_for_filters_no_current}( $field.name)"/>Alle abw&auml;hlen</a>
+                    <li class="facetoption"><a  class="pure-button sl" href="#{url_for_filters_no_current}( $field.name)"/>Alle abw&auml;hlen</a>
                     </li>
                 #end
 
@@ -109,10 +109,10 @@
 
                 #if( $field_active && $value_active  )
                     ##using $values_no_current
-                    <a href='#url_for_facet_filter_multi($field.name, $values_no_current)$fq_unique_option' class="multi_facet_field multi_facet_field_selected">#facetname($facet_name )#relative_results($facet.count)</a>
+                    <a href='#url_for_facet_filter_multi($field.name, $values_no_current)$fq_unique_option' class="multi_facet_field multi_facet_field_selected sl">#facetname($facet_name )#relative_results($facet.count)</a>
                  #else
                     ## using $values_with_current
-                <a href="#url_for_facet_filter_multi($field.name, $values_with_current)$fq_unique_option" class="multi_facet_field">#facetname($facet_name )#relative_results($facet.count)</a>
+                <a href="#url_for_facet_filter_multi($field.name, $values_with_current)$fq_unique_option" class="multi_facet_field sl">#facetname($facet_name )#relative_results($facet.count)</a>
                 #end
 
 
@@ -146,7 +146,7 @@
 
 #if($term_clouds_activated)
 
-<a class="additionalfacettoggle  pure-button pure-button-active" href="#url_for_home#{lens_without_P}(['facet.field', 'textfs', "f.namedentities_per.facet.limit", "f.namedentities_loc.facet.limit", "f.text.facet.limit"])">Text- und Namensfacetten aktiv</a>
+<a class="additionalfacettoggle  pure-button pure-button-active sl" href="#url_for_home#{lens_without_P}(['facet.field', 'textfs', "f.namedentities_per.facet.limit", "f.namedentities_loc.facet.limit", "f.text.facet.limit"])">Text- und Namensfacetten aktiv</a>
 
     <div id="termnumberselector">
         Anzeigen:
@@ -154,9 +154,9 @@
 
         #foreach($termnumber in $termnumbers)
             #if($request.params.get('f.namedentities_per.facet.limit') == $termnumber)
-                <a class="pure-button button-xsmall pure-button-active" href="#url_for_home#{lens_without_P}(['facet.field', 'textfs', "f.namedentities_per.facet.limit", "f.namedentities_loc.facet.limit", "f.text.facet.limit"])">$termnumber</a>
+                <a class="pure-button button-xsmall pure-button-active sl" href="#url_for_home#{lens_without_P}(['facet.field', 'textfs', "f.namedentities_per.facet.limit", "f.namedentities_loc.facet.limit", "f.text.facet.limit"])">$termnumber</a>
                 #else
-            <a class="pure-button button-xsmall"  href="#url_for_home#{lens_without_P}($termfacets)#foreach( $termfacet in $termfacets)&$termfacet=$termnumber#end">$termnumber</a>
+            <a class="pure-button button-xsmall sl"  href="#url_for_home#{lens_without_P}($termfacets)#foreach( $termfacet in $termfacets)&$termfacet=$termnumber#end">$termnumber</a>
 
             #end
         #end
@@ -164,5 +164,5 @@
     </div>
 
  #else
-<a class="additionalfacettoggle  pure-button" href="#url_for_home#{lens_without_P}(['facet.field'])#foreach($f in $text_facets)&facet.field=$esc.url("{!ex=$f}")$f#end&textfs=true">Filter f&uuml;r h&auml;ufige Terme und Namen aktivieren</a>
+<a class="additionalfacettoggle  pure-button sl" href="#url_for_home#{lens_without_P}(['facet.field'])#foreach($f in $text_facets)&facet.field=$esc.url("{!ex=$f}")$f#end&textfs=true">Filter f&uuml;r h&auml;ufige Terme und Namen aktivieren</a>
 #end

@@ -3,7 +3,7 @@
 
     #topic_selector_button()
 
-    <a class="pure-button deselect_all_topics" href="#{url_for_home}#{lens_without_P}(['show_topic', 'ct'])">Alle Topics abw&aumlhlen</a>
+    <a class="pure-button deselect_all_topics sl" href="#{url_for_home}#{lens_without_P}(['show_topic', 'ct'])">Alle Topics abw&aumlhlen</a>
 
     #select_current_topic()
 
@@ -47,11 +47,11 @@
                        #set($urlforfilter = "#url_for_facet_filter_multi($topicmodelfield, $values_with_current)")
                        #set($urlforfilter = $urlforfilter.replaceAll("&show_topic=$topicname", ""))
 
-                       <a href="$urlforfilter" class="add_filter" title="Topic $displaytopicname als Filter einsetzen">
+                       <a href="$urlforfilter" class="add_filter sl" title="Topic $displaytopicname als Filter einsetzen">
                            <img src="/solr/WdK.dev/admin/file?file=/velocity/img/filter_icon.png&amp;contentType=image/png" alt=""></a>
                     #end
 
-              <a class="selected_topic" href="#{url_for_home}#{lens_No_Key_Value}('show_topic', $topicname)" title="abwählen">#displaytopicmodelname($topicname): $displaytopicname ($topiccounts[$topicname ])</a>
+              <a class="selected_topic sl" href="#{url_for_home}#{lens_No_Key_Value}('show_topic', $topicname)" title="abw&auml;hlen">#displaytopicmodelname($topicname): $displaytopicname ($topiccounts[$topicname ])</a>
 
                 #if($selected)
                     <div class="remove_filter">Achtung: Topic "$displaytopicname" ist gleichzeitig als Filter und f&uuml; die Analyse ausgew&auml;hlt -

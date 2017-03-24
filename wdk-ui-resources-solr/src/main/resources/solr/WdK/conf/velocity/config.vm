@@ -121,7 +121,12 @@
     'Konfession_wdk'
 ])
 
-
+##fields used for namedentities mlt-option
+#set($extracted_metadata_fields = [
+    "namedentities_per",
+    "namedentities_loc",
+    "namedentities_org"
+])
 
 ##facets to be activated as additional facets because of performance reasons. These facets are activeted by adding them to the url
 #set($text_facets = [

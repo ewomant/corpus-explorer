@@ -13,7 +13,7 @@ $(window).bind("pageshow", function() {
 $(document).ready(function() {
 
 
-    $('a').click(function(){
+    $('a.sl').click(function(){
        $('body').addClass('waiting');
         //$("body").css("cursor", "progress");
     });
