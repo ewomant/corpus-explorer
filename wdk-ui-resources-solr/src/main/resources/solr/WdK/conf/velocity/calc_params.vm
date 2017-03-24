@@ -60,16 +60,18 @@
         ##todo: type = junkfilter
         #if($fq_string != '')
             #set($fq_string="#removeTag($fq_string)")
+            #if($fq_string.contains(':'))
+                #set($selection = $fq_string.split(":",2))
+                #set($field = $selection[0].trim())
+                #set($value = $selection[1].trim())
+            #end
 
-            #set($selection = $fq_string.split(":",2))
-            #set($field = $selection[0].trim())
 
-            #set($value = $selection[1].trim())
 
             #if($facet_query_names[$fq_string.trim()] ||  $facet_query_names["-$fq_string.trim()"] )##fuer predefined filter-queries - bleibt, wenn nicht vorhandenpredefined filter-queries - bleibt, wenn nicht vorhanden
 
-                ##set($field = $fq_string.trim())
-                ##set($field = "#removeEx($fq_string.trim())")
+
+                #set($field = "#removeEx($fq_string.trim())")
 
                 #set($type = "predefined")
 
