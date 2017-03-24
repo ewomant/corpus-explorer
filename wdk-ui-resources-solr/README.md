@@ -34,7 +34,7 @@ This SearchHandler is used to fetch additional queries from the index in client 
 
 
 ### Additional Libraries
-The assocTool [wdk-ui-assocTool](.wdk-ui-assocTool) is used to calculate loglikelihood-ratios in the statsview-table. It is inserted as an additional tool into the VecolityResponseWriter.
+The assocTool [wdk-ui-assocTool](./wdk-ui-assocTool) is used to calculate loglikelihood-ratios in the statsview-table. It is inserted as an additional tool into the VecolityResponseWriter.
 
 ```xml
 <queryResponseWriter name="velocity" class="solr.VelocityResponseWriter" startup="lazy">
@@ -52,18 +52,14 @@ schema.xml - field configuration during indexing
 ---
 The UI assumes certain datatypes of the fields declared in [schema.xml](src/main/resources/solr/WdK/conf/schema.xml)
 
-- Fields starting with `goobi_` will by default, this behaviour is overriden for some fields which need different processing
-- Fields ending in `_wdk` or `_opac` (from the *csv-files) are by default  indexed as multivalued, indexed string fields and stored, this behaviour is overriden for some fields which need different processing 
+- Fields starting with `goobi_` (from the initial METS/MOTS-Corpus format) or in `_wdk` or `_opac` (from the *csv-files) will by default be indexed as multivalued, indexed string fields and stored. This behaviour can be overriden for selected fields of a different field-types.
+- there are two types of preprocessed text-fields: `text_de`  is being analyzed as German text while `text_preprocessed` is only tokenized at whitespaces and expects text that has already been normalized and is currently used to conveniently provide the text in the form as used in topic-modeling.
 - fields starting on `topic_` contain the topic-intensity in the corpus and are expected to be of field-type `tdouble`
 - fields ending on `_topwords` expect topics to be indexed as string without preprocessing: These fields are used to extract topicnames throughout the tool. 
-- there are two types of preprocessed text-fields: `text_de`  is being analyzed as German text while `text_preprocessed` is only tokenized at whitespaces and expects text that has already been normalized and is currently used to conveniently provide the text in the form as used in topic-modeling.
-- the following fields that are not created automatically are expected to be of type "int": `goobi_PublicationYear`, `page`, `Afz_wdk`  
+- the content for the following fields needs to be parable as an "int": `goobi_PublicationYear`, `page`, `Afz_wdk`  
 - `goobi_PublicationYear` needs to be 4-digits long in the form yyyy
 - The fields marked with  <!-- Multiple value metadata count fields --> are needed to provide the unique-value-option on multi-valued-fields
-- a `solr.RandomSortField` is included to draw randomized samples from the corpus
-
-
-
+- a `solr.RandomSortField` is included to draw randomized samples from the index
 
 velocity/config.vm-Configuration of fieldnames and topicmodels
 ----
