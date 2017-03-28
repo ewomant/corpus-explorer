@@ -220,12 +220,12 @@ h1 em{
 
 
 .constraints .qfqs {
-    padding-left: 3em;
+
     text-indent: -3em;
     background-color: #344E6A;
     color: white;
-    padding: 0.2em 1em 0.2em 3.5em;
-    border-radius: 3px;
+    padding: 0.3em 1em 0.3em 3.5em;
+    border-radius: 2px;
 }
 
 
@@ -378,10 +378,13 @@ body .results_per_page input[type="text"]{
 .result-title h2{
 margin-top:0;
 margin-bottom:2px;
+
 }
 
 .result-title a{
 text-decoration: none;
+    color:black;
+
 }
 
 .sortdetails{

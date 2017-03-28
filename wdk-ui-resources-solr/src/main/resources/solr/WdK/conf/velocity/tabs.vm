@@ -16,7 +16,7 @@
     #if( !$isgrouped)
       Seiten
     #else
-      <a href="#url_for_home$lensnog">
+      <a class="sl" href="#url_for_home$lensnog">
         Seiten</a>
     #end
   </span>
@@ -41,7 +41,7 @@
      Gruppiert nach Werk
     #else
 
-      <a href="#url_for_home$lensnog&group=true&group.field=${groupfield}&group.ngroups=true&group.limit=1&group.facet=true">
+      <a class="sl" href="#url_for_home$lensnog&group=true&group.field=${groupfield}&group.ngroups=true&group.limit=1&group.facet=true">
         Gruppiert nach Werk</a>
     #end
   </span>

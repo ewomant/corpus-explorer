@@ -84,6 +84,13 @@
 	'kjl_Bemerkungen_sni'
 ])
 
+##fields used for namedentities mlt-option
+#set($extracted_metadata_fields = [
+    "namedentities_per",
+    "namedentities_loc",
+    "namedentities_org"
+])
+
 #set($text_facets = [
     "text",
     "namedentities_per",

@@ -7,7 +7,7 @@ Below, the prerequisites of a WdK-Explorer Installation are explained with sugge
 
 Solr
 ------
-WdK-Explorer Interface has been tested with Version Solr Version 6.1 and 6.2. Solr should be started with at least 3 GB of Java Heap-Memory to support complex Statistics-Queries, e.g. `bin\solr  start -m 4g`
+WdK-Explorer Interface has been tested with Version Solr Version 6.1, 6.2. and 6.4.2. Solr should be started with at least 3 GB of Java Heap-Memory to support complex Statistics-Queries, e.g. `bin\solr  start -m 4g`
 
 Warning: VelocityResponsewriter is not meant to be used in production. To expose the UI publicly, some saftey measures have to be taken (see below).
 

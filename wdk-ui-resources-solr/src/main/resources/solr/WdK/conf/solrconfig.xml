@@ -902,7 +902,7 @@
         </lst>
     </requestHandler>
 
-    <!-- A request handler for pivot queries in json. Query Settings should be equivalent to /browse -->
+    <!-- A request handler for stats queries in json. Query Settings should be equivalent to /browse -->
     <requestHandler name="/json" class="solr.SearchHandler">
         <lst name="defaults">
             <str name="echoParams">explicit</str>
