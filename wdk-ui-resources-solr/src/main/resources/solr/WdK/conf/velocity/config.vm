@@ -171,6 +171,7 @@ Schulformen_opac: Gymnasium
 
 ##used primariy in result-list
 #set($pagefield = 'page')
+#set($displaypagefield = "goobi_orderlabel")
 #set($bookfield = 'goobi_CatalogIDDigital')
 #set($booktitlefield = 'goobi_TitleDocMain')
 #set($publicationplacefield = 'goobi_PlaceOfPublication')

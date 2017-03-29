@@ -168,13 +168,13 @@
 #elseif($render == "page")
 
 	<h2>
-	  <span class="docpage">$countdocs.</span> - S. $pagenr</span>
+	  <span class="docpage">$countdocs.</span> - S. #field($displaypagefield)</span>
 	</h2>
 #else
 
 	<h2>
 	  <span class="docpage">$countdocs.</span>&nbsp;<a title="Alle Seiten dieses Werkes in neuem Fenster" href="#url_for_home?fq=document:$document_id&v.template=browse_docs&sort=page+asc&facet=false" target="_blank">$booktitle</a> <a title="Werk als zus&auml;tzlicher Filter" href="#url_for_home#{lens_No_CurrentFQ}("document:$document_id")&fq=document:$document_id"><img src="#{url_for_solr}/admin/file?file=/velocity/img/filter_icon.png&contentType=image/png" alt=""/></a>
-	  <span class="pagenr">- S. $pagenr</span>
+	  <span class="pagenr">- S. #field($displaypagefield)</span>
 	</h2>
 
 #end

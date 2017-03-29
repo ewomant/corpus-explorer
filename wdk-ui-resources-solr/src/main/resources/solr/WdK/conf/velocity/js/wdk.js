@@ -17,9 +17,10 @@ $(document).ready(function() {
 
 
     $(document).tooltip({
-        show: {effect: "fadeToggle", duration: 800},
-        // position: { my: "left+15 top+15", at: "left bottom" },
-        content: function () {
+        show: {
+            effect: "fadeToggle", duration: 800},
+            position: { my: "left+15 top", at: "left bottom" },
+            content: function () {
             var element = $(this);
 
             if (element.is("[title]")) {
@@ -29,6 +30,7 @@ $(document).ready(function() {
                 return element.attr("alt");
             }
         }
+
     });
 
     //create function, which hides all but those saved in session

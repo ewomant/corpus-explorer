@@ -319,7 +319,7 @@ $math.add($inval,$gapval)##
 
 #macro(formatp $val)
     #set($val = $math.mul($val,100))##
-    #set($val = $math.toInteger($val))#if($val>0)$val%#{else}0%#end#end
+    #set($val = $math.round($val))#if($val>0)$val%#{else}0%#end#end
 
 #macro(formatp2d $val)$String.format("%.2f", $math.mul($val,100))%#end
 

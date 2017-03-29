@@ -45,7 +45,8 @@ var smooth_steps = 2;
 
 var x_time_values;
 
-var percentformat =	d3.format('.2p');
+var pf =	d3.format('.2p');
+var pfs =	d3.format('+.2p');
 var numberformat =  d3.format('r');
 var numberp2 = d3.format('2r');
 var yearformat = d3.time.format('%Y');
@@ -200,11 +201,11 @@ function loadChart(){
 
             totalsNumFound = dataTotal.response.numFound;
 
-        /**
+
             if( cs.groupfield &&  cs.groupfield !== ""){
                 secondlevel_jd_totals = parsePivotData(dataTotal, cs.groupfield, false, cs.statsfield);
             }
-        **/
+
 
 			totalsPivot2 = parsePivotData(dataTotal, cs.groupfield, cs.statsfield, false);
             console.log('data totals parsed, ' + dataTotal.length + " datapoints");
@@ -276,9 +277,6 @@ function parseStatsFields(data, statsfields){
 function parsePivotData(data, pivot1, pivot2, statsfield){
 
     var jd = [];
-
-    var subtopicscount = 0;
-    var subgroupscount = 0;
 
 
 	var pivotname = pivot1;
@@ -607,7 +605,7 @@ c3chartsettings = {
                 y: {
                         show: (show_stats),
                         tick:{
-                                format:  percentformat
+                                format:  pf
                             },
                         label: "Topic-Intensität",
                         min: 0,
@@ -621,7 +619,7 @@ c3chartsettings = {
              y2: {
                     show: true,//do not show if rel_values
                     tick:{
-                        format: show_absolute ? numberformat : percentformat
+                        format: show_absolute ? numberformat : pf
                         //fit: false
                     },
                     label: show_absolute ? "Treffer" : "% Treffer pro Jahr",
@@ -788,7 +786,7 @@ function createTabularLegend(chart, keys, fieldTitles) {
         id_legendHeading).each(function (id) {
         insertLegendField(id, this,
             currentNumFound + " Seiten / "
-            + percentformat(currentNumFound / totalsNumFound) + " des gesamten Korpus in diesem Zeitraum");
+            + pf(currentNumFound / totalsNumFound) + " des gesamten Korpus in diesem Zeitraum");
     });
 
 
@@ -796,13 +794,17 @@ function createTabularLegend(chart, keys, fieldTitles) {
 
     var legendTable = legendContainer.insert('table').attr('class', class_legendData);
 
+    var thr = legendTable.append('thead').append('tr');
+
+    var legendTableBody = legendTable.append('tbody');
+
     //TODO:insert as first heading-line
-    var rowsData = legendTable.selectAll('tr')
+    var rowsData = legendTableBody.selectAll('tr')
         .data(keysData)
         .enter().append('tr').attr('data-id', function (id) {return id;});
 
-    var thr = legendTable.append('thead').append('tr');
-    //TODO: Recreate for each case: Topics, Groups, Topics in Groups
+
+
     // recreate topic_id by removing slg.STATS from key topicnames[sf]
 
 
@@ -810,7 +812,13 @@ function createTabularLegend(chart, keys, fieldTitles) {
 
         thr.insert('th').text('Topic');
         thr.insert('th').html('&oslash;Topic-Intensit&auml;t');
-        thr.insert('th').html('&oslash;Topic-Intensit&auml;t im gesamten Korpus/Zeitraum');
+        thr.insert('th').html('&oslash;Topic-Intensit&auml;t im gesamten Korpus/Zeitraum').attr('title', '&oslash;Topic-Intensit&auml;t im gesamten Korpus f&uumlr diesen Zeitraum');
+
+
+        if(currentNumFound < totalsNumFound ){
+            thr.insert('th').html('&oslash;Topic-Intensit&auml;t relativ zu Korpus').attr('title', '&oslash;Topic-Intensit&auml;t im gesamten Korpus f&uumlr diesen Zeitraum');
+        }
+
 
         rowsData.data(keysData).filter(function (id, i) {
             return overallmean_topics[id] ? true : false;
@@ -823,35 +831,68 @@ function createTabularLegend(chart, keys, fieldTitles) {
                     var title = fieldTitles[id];
                     insertLegendField(id, this, title);
                 });
-            tr.append('td').text(  percentformat(overallmean_topics[id]));
-            tr.append('td').text( percentformat(overallmean_topics_totals[id]));
+            tr.append('td').text(  pf(overallmean_topics[id]));
+            tr.append('td').text( pf(overallmean_topics_totals[id]));
+
+            if (currentNumFound < totalsNumFound) {
+                tr.append('td').text( pfs(overallmean_topics[id] - overallmean_topics_totals[id]));
+            }
+
         });
 
     }else if(show_groups && !show_stats ){
-        thr.insert('th').text('Wert');
-        thr.insert('th').html('Treffer in Gruppe');
-        thr.insert('th').html('Anteil Treffer in Gruppe');
+        var datawidth = pf((60/(4*100)));
+
+        thr.insert('th').text('Gruppe');
+        thr.insert('th').html('Treffer')
+            .attr('width', "10%");
+        thr.insert('th').html('%').attr('title', 'Anteil der Gruppe an allen Ergebnissen')
+           .attr('width', "5%");
+
+        if (totalsNumFound != currentNumFound) {
+          //  thr.insert('th').html('Gruppe in Korpus/Zeitraum')
+          //      .attr('title', 'Seitenzahl f&uuml;r Gruppe im gesamten Korpus f&uuml;r diesen Zeitraum')
+            //    .attr('width', datawidth);
+              thr.insert('th').html('Treffer/Gruppe')
+                  .attr('title', 'Anteil der Treffer (Seitenzahl) in der Gruppe')
+                .attr('width', "15%");
+
+            thr.insert('th').html('+/- %p relativ zu Korpus (' + pf(currentNumFound/totalsNumFound)+ ')')
+                .attr('title', 'Trefferanteil in Ergebnissen ist um x Prozentpunkte h&ouml;her als im gesamten Korpus f&uumlr diesen Zeitraum')
+                .attr('width', "25%");
+        }
 
         rowsData.data(keysData).each(function(id){
             var tr = d3.select(this);
             var fieldid = id.replace(slg.COUNT_REL, "").replace(slg.ABS, "");
-            var fieldData = secondlevel_jd.find(function(e){
-                return e.fieldid  == fieldid; });
-            /**
-             * var fieldDataTotals = secondlevel_jd_totals.find(function(e){
-                return e.fieldid == fieldid; });
-             console.log(fieldDataTotals);
-             */
+            var fieldData = secondlevel_jd.find(function(e){ return e.fieldid  == fieldid; });
+            var fieldDataTotals = secondlevel_jd_totals.find(function(e){ return e.fieldid  == fieldid; });
 
-            if(fieldData){
+            //console.log(id);
+            //console.log(fieldDataTotals);
 
-                tr.append('th').each(function(i){
+            if(fieldData) {
+
+                tr.append('th').each(function (i) {
                     insertLegendField(id, this, fieldData.fieldvalue);
                 });
                 tr.insert('td').text(fieldData.count);
 
-                tr.insert('td').text(percentformat(fieldData.count_rel));
-                //tr.insert('td').text(percentformat(fieldData.count / totalsNumFound));
+                tr.insert('td').text(pf(fieldData.count / currentNumFound));
+
+                if (totalsNumFound != currentNumFound) {
+
+
+                //tr.insert('td').text(fieldDataTotals.count);
+
+                //    tr.insert('td').text(pf( (fieldData.count / currentNumFound) - (fieldDataTotals.count / totalsNumFound)));
+
+                tr.insert('td').text(pf(fieldData.count_rel));
+                //tr.insert('td').text(pf(currentNumFound / totalsNumFound));
+                tr.insert('td').text(pfs(fieldData.count_rel - (currentNumFound / totalsNumFound)));
+
+
+                }
 
             }
 
@@ -859,16 +900,25 @@ function createTabularLegend(chart, keys, fieldTitles) {
 
 
     }else if(show_groups && show_stats ){
+
+
         legendContainer.insert('div', '#groupselector_box').html(
-             percentformat(overallmean_topics[cs.statsfield[0]+slg.TOPIC_MEAN])
+             pf(overallmean_topics[cs.statsfield[0]+slg.TOPIC_MEAN])
            +"&oslash;Topic-Intensit&auml;t f&uuml;r Topic "
             +  truncateString(topicnames[cs.statsfield[0]].name, 50)
             + " in allen Treffern. "
             );
 
-        thr.insert('th').text('Wert');
-        thr.insert('th').html('&oslash;Topic-Intensit&auml;t' );
-        thr.insert('th').html('Seiten in Gruppe');
+
+
+        thr.insert('th').text('Gruppe');
+        thr.insert('th').html('Treffer').attr("width", "10%");
+        thr.insert('th').html('&oslash;Topic-Intensit&auml;t' ).attr("width", "15%");
+
+
+            thr.insert('th').html('&oslash;Topic-Intensit&auml;t relativ zu allen Treffern ('+pf(overallmean_topics[cs.statsfield[0]+slg.TOPIC_MEAN])+")").attr("width", "20%");
+
+
         //thr.insert('th').html('Anzahl in Korpus');
 
         rowsData.data(keysData).each(function(id){
@@ -883,9 +933,10 @@ function createTabularLegend(chart, keys, fieldTitles) {
                 tr.append('th').each(function(i){
                     insertLegendField(id, this);
                 });
-
-                tr.insert('td').text(percentformat(fieldData[cs.statsfield[0]+slg.TOPIC_MEAN]));
                 tr.insert('td').text( fieldData.count);
+                tr.insert('td').text(pf(fieldData[cs.statsfield[0]+slg.TOPIC_MEAN]));
+                tr.insert('td').text(pfs(fieldData[cs.statsfield[0]+slg.TOPIC_MEAN] - overallmean_topics[cs.statsfield[0]+slg.TOPIC_MEAN]));
+
             }
 
         });
@@ -932,10 +983,10 @@ function createTabularLegend(chart, keys, fieldTitles) {
 
 
 
-    if(keys.length > 1){
+    if(keys.length > 2){
         var chartlegendcontainer_size =  $("#chartlegendcontainer")[0].offsetHeight -10;
         var topicbox_size = $(".topicbox")[0].offsetHeight ;
-        var max_chartlegend_size = (keys.length + 5) * 24;
+        var max_chartlegend_size = (keys.length + 5) * 30;
         //var max_resize_height = topicbox_size> max_chartlegend_size ? topicbox_size:max_chartlegend_size;
         var max_start_size = (topicbox_size > chartlegendcontainer_size)? topicbox_size:chartlegendcontainer_size;
 
@@ -955,12 +1006,14 @@ function createTabularLegend(chart, keys, fieldTitles) {
                     }
                 });
 
-        //TODO:  datatable not working -  Sorting etc? does not work
-        /**
+
         $('#'+id_legend + " ." + class_legendData).ready(function() {
             console.log('table.legendData.ready');
-            $('#'+id_legend + " ." + class_legendData).tablesorter({});
-        });**/
+            $('#'+id_legend + " ." + class_legendData).tablesorter({
+                theme : 'default',
+                sortInitialOrder:"desc",
+            });
+        });
     }
     console.timeEnd("createTabularLegend");
 
@@ -1160,16 +1213,16 @@ var solrvis_getTooltipContent = function (d, defaultTitleFormat, defaultValueFor
                         var count = row.count;
                     }else if (show_absolute) {
 
-                        var count =  row.count + " (" +  percentformat(row.count_rel) + ")";
+                        var count =  row.count + " (" +  pf(row.count_rel) + ")";
 
                     }else{
-                        var  count = percentformat(row.count_rel)  + " (" + row.count  + ")";
+                        var  count = pf(row.count_rel)  + " (" + row.count  + ")";
 
                     }
 
                     text += rowformat( "Treffer", count, CLASS.tooltipContainer, color('count'));
                 }else if(row.count_rel){
-                    count = percentformat(row.count_rel);
+                    count = pf(row.count_rel);
                     text += rowformat( "% Treffer pro Jahr", count, CLASS.tooltipContainer, color('count'));
                 }
             }
@@ -1196,7 +1249,7 @@ var solrvis_getTooltipContent = function (d, defaultTitleFormat, defaultValueFor
                 }else if(grouptype === slg.COUNT_REL){
                     text += rowformat( fieldTitles[d[i].id], value + " ("+ abs_count +")", CLASS.tooltipContainer, bgcolor);
                 }else if(grouptype === slg.ABS){
-                    var rel_count =  percentformat(row[group + slg.COUNT_REL]);
+                    var rel_count =  pf(row[group + slg.COUNT_REL]);
                     text += rowformat( fieldTitles[d[i].id], abs_count + " ("+ rel_count +")", CLASS.tooltipContainer, bgcolor);
                 }else{
                     text += rowformat(  groupid + " (" + typeof(value) + " - Unbekanntes Format): " +fieldTitles[d[i].id], value, CLASS.tooltipContainer, bgcolor);

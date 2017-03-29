@@ -91,6 +91,6 @@ In all steps, the index' `schema.xml` must have defined all the fields.
 
 ## WdK-Explorer Interface
 
-The server comes with an interface based on VelocityResponseWriter that augments results with comparative statistics,  vizualisations and links to the original collection: [wdk-ui-resources-solr](./wdk-ui-resources-solr/). Details of the prerequisites of a Solr-Installation for WdK-Explorer  are explained here with suggestions regarding where future changes to the index-structure need to be accomodated. 
+The server comes with an interface based on VelocityResponseWriter that augments results with comparative statistics,  vizualisations and links to the original collection: [wdk-ui-resources-solr](./wdk-ui-resources-solr/). 
 
-The interface expects some solr-index fields to be of certain types and formats, cf. [README.me](./wdk-ui-resources-solr/README.me)
+Details of the prerequisites of a Solr-Installation for WdK-Explorer  are explained here with suggestions regarding where future changes to the index-structure need to be accomodated. The interface expects some solr-index fields to be of certain types and formats, cf. [README.me](./wdk-ui-resources-solr/README.me)

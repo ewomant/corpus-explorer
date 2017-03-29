@@ -34,7 +34,7 @@
   <script type="text/javascript" src="#{url_for_solr}/admin/file?file=/velocity/js/tablesorter/js/jquery.tablesorter.combined.min.js&contentType=text/javascript"></script>
   <script type="text/javascript" src="#{url_for_solr}/admin/file?file=/velocity/js/tablesorter/js/widgets/widget-columnSelector.min.js&contentType=text/javascript"></script>
  <link rel="stylesheet" type="text/css" href="#{url_for_solr}/admin/file?file=/velocity/js/tablesorter/css/theme.blue.min.css&contentType=text/css"/>
-
+<link rel="stylesheet" type="text/css" href="#{url_for_solr}/admin/file?file=/velocity/js/tablesorter/css/theme.default.min.css&contentType=text/css"/>
 <script type="text/javascript" src="#{url_for_solr}/admin/file?file=/velocity/js/wdk.js&contentType=text/javascript"></script>
 <script type="text/javascript" src="#{url_for_solr}/admin/file?file=/velocity/js/solrvis-lg.js&contentType=text/javascript"></script>
 
