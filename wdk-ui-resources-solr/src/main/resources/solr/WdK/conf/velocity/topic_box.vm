@@ -3,7 +3,7 @@
 
     #topic_selector_button()
 
-    <a class="pure-button deselect_all_topics sl" href="#{url_for_home}#{lens_without_P}(['show_topic', 'ct'])">Alle Topics abw&aumlhlen</a>
+    <a class="pure-button deselect_all_topics sl" href="#{url_for_home}#{lens_without_P}(['show_topic', 'ct'])">Alle Topics abw&auml;hlen</a>
 
     #select_current_topic()
 

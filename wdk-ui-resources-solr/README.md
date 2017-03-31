@@ -1,15 +1,15 @@
 # WdK-Explorer Interface 
 
-The interface is based on Apache Solr's default UI Solritas / [VelocityResponsewriter](https://cwiki.apache.org/confluence/display/solr/Velocity+Response+Writer) and uses an extended set of [Velocity](https://velocity.apache.org/)-Templates together with client-side JS/JQuery/D3-Scipts. We augment results with comparative statistics, vizualisations and links to the original collection. 
+The interface is based on Apache Solr's default UI *[VelocityResponsewriter](https://cwiki.apache.org/confluence/display/solr/Velocity+Response+Writer)* (also known as Solritas and uses an extended set of *[Velocity](https://velocity.apache.org/)-Templates* together with *client-side JS/JQuery/D3-Scipts*. We augment results with comparative statistics, vizualisations and links to the original collection. 
 
 Below, the prerequisites of a WdK-Explorer Installation are explained with suggestions regarding where future changes to the index-structure need to be accomodated. 
 
 
 Solr
 ------
-WdK-Explorer Interface has been tested with Version Solr Version 6.1, 6.2. and 6.4.2. Solr should be started with at least 3 GB of Java Heap-Memory to support complex Statistics-Queries, e.g. `bin\solr  start -m 4g`
+WdK-Explorer Interface has been tested with Version *Solr Version 6.1, 6.2. and 6.4.2.* Solr should be started with at least `3 GB` of Java Heap-Memory to support complex Statistics-Queries, e.g. `bin\solr  start -m 4g`
 
-Warning: VelocityResponsewriter is not meant to be used in production. To expose the UI publicly, some saftey measures have to be taken (see below).
+Warning: *VelocityResponsewriter* is not meant to be used in production. To expose the UI publicly, some saftey measures have to be taken (see below).
 
 All configuration-files described below are included as prepared for the current index and fieldnames:
 
@@ -21,20 +21,20 @@ All configuration-files described below are included as prepared for the current
 
 
 
-solrconfig.xml-Configuration for WdK-Explorer
+Configuration of solrconfig.xml for WdK-Explorer
 ----
 
-For WdK-Explorer, two requestHandler need to be defined
+For WdK-Explorer, two requestHandler need to be defined and one additional Libary needs to be added to the configuration.
 
 ### SearchHandler **/browse**
-This is the SearchHandler for VelocityResponsewriter. Here, primarily the facets that are needed for every request are defined with an exclude-Tag {!ex=fieldname} to provide for multi-select-facetting. All facets are displayed in the interface in the order defined here, grouped by facet-type (facet.query, facet.range, facet.field). In addition, settings for facets that are not activated by default may be defined here. This way, only the facets themselves need to be defined in the query-URL.
+This is the SearchHandler for VelocityResponsewriter. Here, primarily the facets that are needed for every request are defined. Each facet is defined with a corresponding exclude-Tag {!ex=fieldname} to provide for multi-select-faceting. All facets are displayed in the interface grouped by facet-type (facet.query, facet.range, facet.field) and in the order defined here. In addition, settings for facets that are not activated by default may be defined here. This way, only the facets themselves need to be activated in the query-URL.
 
 ### SearchHandler **/json**
 This SearchHandler is used to fetch additional queries from the index in client side scripts. It should **closely model the query-behaviour of /browse**, but does not need to predefine facets and returns json as default-format.
 
 
 ### Additional Libraries
-The assocTool [wdk-ui-assocTool](./wdk-ui-assocTool) is used to calculate loglikelihood-ratios in the statsview-table. It is inserted as an additional tool into the VecolityResponseWriter.
+The assocTool [wdk-ui-assocTool](./wdk-ui-assocTool) is used to calculate loglikelihood-ratios in the `statsview_categories`-table. It is inserted as an additional tool into *VecolityResponseWriter*.
 
 ```xml
 <queryResponseWriter name="velocity" class="solr.VelocityResponseWriter" startup="lazy">
@@ -44,7 +44,7 @@ The assocTool [wdk-ui-assocTool](./wdk-ui-assocTool) is used to calculate loglik
 </queryResponseWriter>
 ```    
    
-The interface needs to be able to load the *wdk-ui-assocTool.jar* in the core's /lib directory, with dependencies either included as jars or included into wdk-ui-assocTool.jar - Alternativly they may be placed in Solr's general lib-directory.
+The interface needs to be able to load `wdk-ui-assocTool.jar` in the core's /lib directory, with dependencies either included as jars or included into `wdk-ui-assocTool.jar` - Alternativly, they may be placed in Solr's general lib-directory.
 
 The tool can be used from within velocity-templates calling functions of the `$assoc` object. 
 
@@ -63,10 +63,10 @@ The UI assumes certain datatypes of the fields declared in [schema.xml](src/main
 
 velocity/config.vm-Configuration of fieldnames and topicmodels
 ----
-All Index-specific variables are collected in the configuration-file config.vm. Here, the names of 
+All Index-specific variables are collected in the configuration-file `config.vm`. Here, the names of 
 topicmodels, their sizes and topicmodelnames are defined. All fields used for faceting and display can be defined here.
 
-In addition, the current version of the index is defined which is used to display the correct documentation from velocity/doc.
+In addition, the current version of the index is defined which is used to display the correct documentation from `velocity/doc`.
 
 
 Documenting the current index in velocity/doc 
@@ -84,9 +84,10 @@ Securing access to VelocityResponsewriter
 -----
 
 If WdK-Explorer needs to be made accessible publicly, access is needed to the following paths:
-* solr/[core-name]/browse 
-* solr/[core-name]/json
-* solr/admin/file
+
+- `solr/[core-name]/browse` 
+- `solr/[core-name]/json`
+- `solr/admin/file`
 
 Access to other paths should be restricted, e.g. using a reverse proxy server, to prevent commits/updates/deletes of documents in the index from other sources.
 

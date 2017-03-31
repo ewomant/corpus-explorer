@@ -75,8 +75,14 @@ a {
 }
 
 h2{
-font-size:120%;
+font-size:140%;
     font-weight: normal;
+}
+
+h3{
+    font-size:110%;
+    font-weight: bold;
+    margin:0.5em 0;
 }
 h1 em{
     font-weight: inherit;
@@ -244,7 +250,12 @@ padding:0px 5px 5px 5px;
 margin-left:1em;
 }
 
-
+#help{
+    float: right;
+}
+#help a:focus, #chartsettings label:focus{
+    outline: none; !important
+}
 
 
 .query-box, .constraints {
@@ -418,7 +429,7 @@ ul.page_doc_extracted_metadata{
 }
 
 .result-body{
-  background: #ddd;
+  background-color: #ddd;
 }
 .result-document  .doc_footer{
     display:table;

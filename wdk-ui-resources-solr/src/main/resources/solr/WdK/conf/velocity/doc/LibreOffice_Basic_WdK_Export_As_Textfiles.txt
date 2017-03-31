@@ -1,0 +1,229 @@
+REM  *****  BASIC  *****
+
+Sub Main
+  
+End Sub
+
+sub WdK_Export_As_Textfiles	
+	'This script exports the text of documents that are stored with metadata 
+	'in the rows of a spreadsheet as e.g. imported from a CSV-File
+	'The export format is a directory of plain-textfiles in UTF-8
+	'The directory will be created in a path relative to the current spreadsheet document
+	'Attention: files with the same name will be overwritten in this directory without prior warning!!!
+	'The id of each document, together with other metdata-fields can be stored in the file-names
+	'The script expects the first line to contain column names for each column
+	'Requiered: A field "text" or "text_normalized" - the text of the first field with either of these names
+	'That appears will be stored in the body of the exported documents
+	'Requiered: A field with the name id which is used for the file-name
+	'Files-Names will be constructed from a running number to maintain sort-order and the id-Field
+	'File-Name-Format: 000007-id1811_00000039.txt where the first group of digits is the running number, 
+	'The two groups of numbers follwing '-id' are a unique id for this document and this page in the current WdK-Index but my be changed in future versions of the index
+	'Optional: If field with names goobi_PublicationYear or goobi_CatalogIDDigital are present in the original documents these will be included in the file names
+	'Extended file-name format: 000007-id1811_00000039-PPN683485121-pub1883.txt- here, the last group of digits starting with pub represents the year of publication,
+	'The PPN is a code referring to the unique identification of a book or a volume in gei-digital.gei.de
+	'In the wdk-Index, a document can be found by entering a query on this field in the searchbox, e.g. ID1811_00000083
+	'Import settings for WdK-Exports from solr as CSV: 
+	'Encoding UTF-8 Language English (if stats are exported) sepearator: , and text-fields enclosed in "
+	'Please check consisteny of import before exporting
+
+	
+	'stores handler of first sheet in document
+	Dim cSheet as object
+	
+	
+	Dim sSavePath as String
+	Dim subDirName as String
+	Dim sFileName as string
+	Dim sFullPath as String
+	Dim sSaveLink as String
+	
+	
+	
+	Dim sIdColumnName as String
+	Dim iIdColumn as Integer
+	
+	Dim sYearColumnName as String
+	Dim iYearColumn as Integer
+	
+	Dim sPPNColumnName as String
+	Dim iPPNColumn as Integer
+	
+	Dim textColumnNames$(2) as String
+	
+	Dim textColumn as Integer
+	
+	Dim maxLine as Integer
+	
+	Dim sTextContent as String
+	
+	
+	Dim c as long
+	Dim t as Integer
+	
+	
+	cSheet = thisComponent.sheets().getByIndex(0)
+	
+	maxLine = LastRowWithData(0, 0) ' lookup last used line in first column
+	
+	'maxLine = 4 'uncomment this line for testing-purposese
+
+	'ask for custom-directory name
+	Dim sMsg, sTitle, sDefault, sReturn as String
+	subDirName =  "export" 	
+	sSavePath = getCurrentPath() &  "/" & subDirName 'TODO relativer pfad zu datei oder eingabefenster
+	
+	sMsg = "Bitte geben Sie einen Namen für ein Unterverzeichnis ein, in welches alle Textdateien exportiert werden." _
+	&  "Warnung: Existierende Dateien mit demselben Namen in diesem Ordner werden überschrieben" 
+	sTitle = "Unterverzeichnis für Export" 
+	sDefault = "export" 
+	sReturn = InputBox( sMsg , sTitle , sDefault  ) 
+	 sReturn = Replace(Trim(sReturn), "/", "")
+	 sReturn = Replace(sReturn, "\", "")
+	 If sReturn <> "" Then REM Gibt den eingegebenen Text aus, eingeschlossen in doppelten Anführungszeichen 
+		subDirName = sReturn
+		sSavePath = getCurrentPath() &  "/" & subDirName  'TODO relativer pfad zu datei oder eingabefenster
+			 
+	  Else
+		print "Sie haben kein Namen für ein Verzeichnis gewählt. \n\Wenn Sie den Vorgang fortsetzen, wird das folgende Verzeichnis verwendet: " _ 
+		& sSavePath _
+		& "Alternativ wählen Sie bitte ""Abbrechen"""
+	 End If 
+	 
+
+	print "Export " & maxLine & " lines to " & sSavePath & "?" 'TODO: Abbrechen ohne Fehlermeldung
+
+	textColumnNames(0) = "text" 'or text_normalized lookup columnnumber of text, title, id, pagefields from first line
+	textColumnNames(1) = "text_normalized"
+
+	
+	
+	'find first name of a text_column
+	for t = 0 To 2
+	
+		columnNumber = find_column( textColumnNames(t), cSheet.Rows(0) )
+		If not isNull(columnNumber) then
+		   textColumn = columnNumber
+		   Exit For
+	 	Endif
+	next t
+	
+	
+	sIdColumnName = "id"
+	sYearColumnName = "goobi_PublicationYear"
+	sPPNColumnName = "goobi_CatalogIDDigital"
+	
+	
+	iIdColumn = find_column( sIdColumnName, cSheet.Rows(0) )
+	iYearColumn = find_column( sYearColumnName, cSheet.Rows(0) )
+	iPPNColumn = find_column( sPPNColumnName, cSheet.Rows(0) )
+	
+	MyFormat = "000000"
+	
+	
+	
+	for c = 1 to  maxLine 'TODO letzte Zeile auswählen
+	
+	  
+	   sTextContent = cSheet.getCellByPosition(textColumn, c).getString
+	   'oSheet.getCellRangeByName("A1").String = sTextContent  
+	   
+	   'remove all specialchars? Exceot of - _ to keep lost postions in normalized text?
+	
+	   'store the save location
+		'prefix with zeros
+	    sFileName = Format(c, MyFormat) & "-id" &  cSheet.getCellByPosition(iIdColumn, c).getString
+	    
+	    
+	    If not isNull(iPPNColumn) Then
+	    	sFileName = sFileName  & "-" &  cSheet.getCellByPosition(iPPNColumn, c).getString  
+	    End If
+	   
+	    If not isNull(iYearColumn) Then
+	    	sFileName =  sFileName  & "-pub" & cSheet.getCellByPosition(iYearColumn, c).getString 
+	    End If
+	   
+	   
+	    sFullpath = sSavePath & "/" & sFileName & ".txt"
+	    
+		'subExportAs(oDoc, sFullpath, oSaveOptions)
+		
+		oFileAccess = CreateUnoService("com.sun.star.ucb.SimpleFileAccess")
+		oOutputStream = oFileAccess.openFileWrite(sFullpath)
+		oFileWrite = createUnoService("com.sun.star.io.TextOutputStream")
+		oFileWrite.OutputStream = oOutputStream
+		'oFileWrite.Encoding = "ISO-8859-1" 
+		oFileWrite.Encoding = "UTF-8"
+		oFileWrite.writeString(sTextContent)
+		oFileWrite.closeOutput
+		
+	 
+	
+	next c
+	
+	MsgBox "" & (c-1) & " lines exported as text-files into " & sSavePath
+   
+end sub
+
+
+Function LastRowWithData (ColumnIndex as long, SheetIndex as long) as long
+   Dim oCursor As Object, oRange As Object, oSheet As Object
+   Dim LastRowOfUsedArea as long, R as long
+   Dim RangeData
+
+   oSheet = ThisComponent.Sheets(SheetIndex)
+   oCursor = oSheet.createCursor
+   oCursor.gotoEndOfUsedArea(False)
+   LastRowOfUsedArea = oCursor.RangeAddress.EndRow
+   oRange = oSheet.getCellRangeByPosition(ColumnIndex, 0, ColumnIndex, LastRowOfUsedArea)
+   oCursor = oSheet.createCursorByRange(oRange)
+   RangeData = oCursor.getDataArray
+
+   For R = UBound(RangeData) To LBound(RangeData) Step - 1
+       If RangeData(R)(0) <> "" then
+          LastRowWithData = R
+          Exit Function
+       End If
+   Next
+End Function
+
+
+
+
+
+
+   
+Private Function find_column(strString as string, objRange as object) as string
+   dim oCell as object
+   dim index as long
+   dim FandR as object
+    
+   If strString = "" then End 'Blank entry or Cancel clicked.
+   
+   FandR = objRange.createSearchDescriptor 'Set up find and replace.
+   FandR.setSearchString(strString)
+   FandR.SearchCaseSensitive = False
+   oCell = objRange.findFirst(FandR)
+   If not isNull(oCell) then
+      find_column = oCell.CellAddress.Column
+ 	Endif
+   
+End Function   
+   
+Private Function getCurrentPath as String
+
+	BasicLibraries.loadLibrary("Tools")
+	getCurrentPath=DirectoryNameoutofPath(ThisComponent.getURL(),"/")
+
+End Function
+
+
+sub subExportAs(oDoc, sFile, sType)
+   sURL = convertToURL(sFile)
+
+  oDoc.storeToURL(sURL, sType)
+
+end sub
+
+
+
+

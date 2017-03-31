@@ -24,7 +24,7 @@
 
         <table class="topic_selector_table">
             <thead><tr>
-            <th class="topic_number">#</td>
+            <th class="topic_number">#</th>
             <th class="topic_label">Name</th>
             <th class="count">Treffer</th>
             <th class="sorter-false checkbox">&nbsp;</th>

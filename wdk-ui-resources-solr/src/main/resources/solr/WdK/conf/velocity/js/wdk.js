@@ -437,6 +437,9 @@ $(document).ready(function() {
             open: function () {
                 updateselected();
                 initialize_sort_topic_tables();
+                jQuery('.ui-widget-overlay').bind('click',function(){
+                    $("#topic_selector").dialog('close');
+                })
             },
         });
     $("#topic_selector_button").click(function (e) {
@@ -448,6 +451,30 @@ $(document).ready(function() {
     $("#topic_selector .topic-cancel").click(function () {
         topic_selector_dialog.dialog("close");
     });
+
+    var helpbox_dialog =  $("#helpbox").dialog(
+        {
+            autoOpen: false,
+            title: "Hilfe und Information",
+            height: "auto",
+            width: "600",
+            closeText: "Schliessen",
+            modal: true,
+            position: {my: "center top", at: "center top", of: '#content'},
+            open: function(){
+                jQuery('.ui-widget-overlay').bind('click',function(){
+                    $("#helpbox").dialog('close');
+                })
+            }
+
+        });
+    $("#help a").click(function (e) {
+        e.preventDefault();
+        helpbox_dialog.dialog("open");
+    });
+
+
+
 
     function initialize_sort_topic_tables(){
 

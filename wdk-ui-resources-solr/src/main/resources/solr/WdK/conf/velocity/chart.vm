@@ -118,8 +118,9 @@ current_query_url = '${current_query_url}&v.template=browse_docs';
     #end
     #if($chartShowTopics)
         #set($statsfieldurl = "${statsfielddef}$ct")
+
         #set($statstitle = "#{displaytopicname}($ct)")
-        #set($statstitle = "$esc.s$statstitle.trim()$esc.s")
+        #set($statstitle = "$statstitle.trim()")
         #set($statsfield = "'$ct'")
         #set($chartname = "Topic $statstitle nach $groupStatsField" )
 
@@ -135,7 +136,7 @@ current_query_url = '${current_query_url}&v.template=browse_docs';
         #if($statsfield != "")#set($statsfield = "$statsfield,")#end
         #set($statsfield = "$statsfield'$!topicname'")
     #end
-
+    #set($statstitle = "ausgew&auml;hlte Topics")
 
 
 #end
@@ -146,9 +147,9 @@ chart_conf.currentselection_url = $esc.s#{solrjson_pivot_stats_url_json}${statsf
 chart_conf.baseurl = $esc.s#solrjson_pivot_stats_corpus_url_json()${statsfieldurl}$esc.s,
 
         chart_conf.statsfield = [$statsfield];
-chart_conf.statsfield_title = [$statstitle];
+    chart_conf.statsfield_title = [$esc.s$statstitle$esc.s];
 
-    #set($chartname = "Topic: " + $statstitle)
+    #set($chartname =  $statstitle)
 #else
 ## necessray with pivot-facet?
 topic1title = "";
@@ -307,10 +308,10 @@ statsfield ? $statsfield
 
     <select name="ct" id="group_stats_value" onchange="this.form.submit()">
 
-        <option value="$noTopicParam" #if($ct  == $noTopicParam) selected #end />Gruppengr&ouml;&szlig;e (kein Topic)</option>
+        <option value="$noTopicParam" #if($ct  == $noTopicParam) selected #end>Gruppengr&ouml;&szlig;e (kein Topic)</option>
         #foreach($topic in $showtopics)
 
-            <option value="$topic" #if($ct  == $topic) selected #end >
+            <option value="$topic" #if($ct  == $topic) selected #end>
                 #truncate( "#displaytopicname($topic)" , 50)</option> ##todo: selected wenn group_stats_field
         #end
     </select>

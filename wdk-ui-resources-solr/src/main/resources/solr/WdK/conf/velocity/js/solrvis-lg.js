@@ -70,7 +70,56 @@ var cs;
 
 var maxNumberOfGroups = 100;
 
+//add endsWith function for explorer
+String.prototype.endsWith = function(suffix) {
+    return this.indexOf(suffix, this.length - suffix.length) !== -1;
+};
 
+//add find for explorer
+// https://tc39.github.io/ecma262/#sec-array.prototype.find
+if (!Array.prototype.find) {
+    Object.defineProperty(Array.prototype, 'find', {
+        value: function(predicate) {
+            // 1. Let O be ? ToObject(this value).
+            if (this == null) {
+                throw new TypeError('"this" is null or not defined');
+            }
+
+            var o = Object(this);
+
+            // 2. Let len be ? ToLength(? Get(O, "length")).
+            var len = o.length >>> 0;
+
+            // 3. If IsCallable(predicate) is false, throw a TypeError exception.
+            if (typeof predicate !== 'function') {
+                throw new TypeError('predicate must be a function');
+            }
+
+            // 4. If thisArg was supplied, let T be thisArg; else let T be undefined.
+            var thisArg = arguments[1];
+
+            // 5. Let k be 0.
+            var k = 0;
+
+            // 6. Repeat, while k < len
+            while (k < len) {
+                // a. Let Pk be ! ToString(k).
+                // b. Let kValue be ? Get(O, Pk).
+                // c. Let testResult be ToBoolean(? Call(predicate, T, « kValue, k, O »)).
+                // d. If testResult is true, return kValue.
+                var kValue = o[k];
+                if (predicate.call(thisArg, kValue, k, o)) {
+                    return kValue;
+                }
+                // e. Increase k by 1.
+                k++;
+            }
+
+            // 7. Return undefined.
+            return undefined;
+        }
+    });
+}
 
  var solrvis_lg_loadchart = function(chart_conf){
 
@@ -508,7 +557,7 @@ function parseFacetData(data){
 
 function drawChart(){
 	console.log("drawing Chart");
-    console.time("drawChart()");
+    //console.time("drawChart()");
 
 
 //add count: "Seiten" - make temporal copy of array, keep original for new combinations
@@ -560,7 +609,7 @@ c3chartsettings = {
 	    bindto: '#chartcontainer',
 	    size: {
 
-	    	height: $('#chartcontainer')[0].offsetHeight,
+	    	height: $('#chartresizable')[0].offsetHeight,
 	    },
 
 	    data: {
@@ -672,14 +721,14 @@ c3chartsettings = {
     function toggle(id) {
         chart.toggle(id);
     }
-    console.timeEnd("drawChart()");
+    //console.timeEnd("drawChart()");
 
     createTabularLegend(chart, keys, fieldTitles);
 }
 
 
 function createTabularLegend(chart, keys, fieldTitles) {
-    console.time("createTabularLegend");
+    //console.time("createTabularLegend");
 
     var class_legendItem = 'legend-item';
     var class_legendItemUnFocused = 'legendItemUnFocused';
@@ -812,11 +861,16 @@ function createTabularLegend(chart, keys, fieldTitles) {
 
         thr.insert('th').text('Topic');
         thr.insert('th').html('&oslash;Topic-Intensit&auml;t');
-        thr.insert('th').html('&oslash;Topic-Intensit&auml;t im gesamten Korpus/Zeitraum').attr('title', '&oslash;Topic-Intensit&auml;t im gesamten Korpus f&uumlr diesen Zeitraum');
+        thr.insert('th').html('&oslash;Topic-Intensit&auml;t im gesamten Korpus/Zeitraum')
+            .attr('title', '&oslash;Topic-Intensit&auml;t im gesamten Korpus f&uumlr diesen Zeitraum');
+
 
 
         if(currentNumFound < totalsNumFound ){
-            thr.insert('th').html('&oslash;Topic-Intensit&auml;t relativ zu Korpus').attr('title', '&oslash;Topic-Intensit&auml;t im gesamten Korpus f&uumlr diesen Zeitraum');
+            thr.insert('th')
+                .html('+/- %p &oslash;Topic-Intensit&auml;t')
+                .attr('title', '&oslash;Topic-Intensit&auml;t  in Ergebnissen ist um x Prozentpunkte' +
+                    ' h&ouml;her/niedriger als im gesamten Korpus f&uumlr diesen Zeitraum');
         }
 
 
@@ -850,15 +904,14 @@ function createTabularLegend(chart, keys, fieldTitles) {
            .attr('width', "5%");
 
         if (totalsNumFound != currentNumFound) {
-          //  thr.insert('th').html('Gruppe in Korpus/Zeitraum')
-          //      .attr('title', 'Seitenzahl f&uuml;r Gruppe im gesamten Korpus f&uuml;r diesen Zeitraum')
-            //    .attr('width', datawidth);
+
               thr.insert('th').html('Treffer/Gruppe')
                   .attr('title', 'Anteil der Treffer (Seitenzahl) in der Gruppe')
-                .attr('width', "15%");
+                  .attr('width', "15%");
 
-            thr.insert('th').html('+/- %p relativ zu Korpus (' + pf(currentNumFound/totalsNumFound)+ ')')
-                .attr('title', 'Trefferanteil in Ergebnissen ist um x Prozentpunkte h&ouml;her als im gesamten Korpus f&uumlr diesen Zeitraum')
+            thr.insert('th').html('+/- %p realtiv zu Korpus' + pf(currentNumFound/totalsNumFound)+ ')')
+                .attr('title', 'Trefferanteil in der Gruppe ist um x Prozentpunkte' +
+                    ' h&ouml;her/niedriger  als im gesamten Korpus f&uuml;r diesen Zeitraum')
                 .attr('width', "25%");
         }
 
@@ -869,7 +922,7 @@ function createTabularLegend(chart, keys, fieldTitles) {
             var fieldDataTotals = secondlevel_jd_totals.find(function(e){ return e.fieldid  == fieldid; });
 
             //console.log(id);
-            //console.log(fieldDataTotals);
+            console.log(secondlevel_jd);
 
             if(fieldData) {
 
@@ -904,10 +957,15 @@ function createTabularLegend(chart, keys, fieldTitles) {
 
         legendContainer.insert('div', '#groupselector_box').html(
              pf(overallmean_topics[cs.statsfield[0]+slg.TOPIC_MEAN])
-           +"&oslash;Topic-Intensit&auml;t f&uuml;r Topic "
+           +" &oslash; Topic-Intensit&auml;t f&uuml;r Topic "
             +  truncateString(topicnames[cs.statsfield[0]].name, 50)
-            + " in allen Treffern. "
+            + " in allen Treffern. <br/><i>"
+        + pf(overallmean_topics_totals[cs.statsfield[0]+slg.TOPIC_MEAN])
+        +" &oslash; im gesamten Korpus/Zeitraum</i>"
             );
+
+        console.log(cs.statsfield[0]+slg.TOPIC_MEAN);
+        console.log(overallmean_topics[cs.statsfield[0]+slg.TOPIC_MEAN]);
 
 
 
@@ -916,7 +974,12 @@ function createTabularLegend(chart, keys, fieldTitles) {
         thr.insert('th').html('&oslash;Topic-Intensit&auml;t' ).attr("width", "15%");
 
 
-            thr.insert('th').html('&oslash;Topic-Intensit&auml;t relativ zu allen Treffern ('+pf(overallmean_topics[cs.statsfield[0]+slg.TOPIC_MEAN])+")").attr("width", "20%");
+        thr.insert('th')
+            .html('&oslash;Topic-Intensit&auml;t relativ zu allen Treffern ('
+                +pf(overallmean_topics[cs.statsfield[0]+slg.TOPIC_MEAN])+")")
+            .attr('title', 'Mittlere Topic-Intensit&auml;t  in der Gruppe ist um x Prozentpunkte' +
+                ' h&ouml;her/niedriger als die mittlere Topic-Intensit&auml;t in allen Treffern')
+            .attr("width", "20%");
 
 
         //thr.insert('th').html('Anzahl in Korpus');
@@ -934,8 +997,11 @@ function createTabularLegend(chart, keys, fieldTitles) {
                     insertLegendField(id, this);
                 });
                 tr.insert('td').text( fieldData.count);
-                tr.insert('td').text(pf(fieldData[cs.statsfield[0]+slg.TOPIC_MEAN]));
-                tr.insert('td').text(pfs(fieldData[cs.statsfield[0]+slg.TOPIC_MEAN] - overallmean_topics[cs.statsfield[0]+slg.TOPIC_MEAN]));
+                tr.insert('td').text(
+                    pf(fieldData[cs.statsfield[0]+slg.TOPIC_MEAN]));
+                tr.insert('td').text(
+                    pfs(fieldData[cs.statsfield[0]+slg.TOPIC_MEAN]
+                        - overallmean_topics[cs.statsfield[0]+slg.TOPIC_MEAN]));
 
             }
 
@@ -1015,7 +1081,7 @@ function createTabularLegend(chart, keys, fieldTitles) {
             });
         });
     }
-    console.timeEnd("createTabularLegend");
+    //console.timeEnd("createTabularLegend");
 
 
 }
