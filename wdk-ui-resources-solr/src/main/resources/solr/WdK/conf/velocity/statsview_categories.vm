@@ -1,5 +1,3 @@
-
-##todo: form, switch topic/percent, mark topic with colour
 #set($searcher = $request.searcher)
 #set($params = $request.params)
 #set($clusters = $response.response.clusters)
@@ -19,6 +17,34 @@
 ##create json string simultaniously? Visualization?
 
 #set($String = "abc")
+
+#set($csv = "")
+#set($csvLine = "")
+#set($sp = ",")
+
+##adds new value to Lines with seperator
+#macro(addValueToLine $v)
+    #set($v = $v.replaceAll(",", " ").replaceAll("\n", ' ').trim())##
+    #if($csvLine == "")
+        #set($csvLine = "$v")
+    #else
+        #set($csvLine = "$csvLine$sp$v")
+    #end
+#end
+
+##adds values to current line
+#macro(addLineToCSV $l)#set($csv  = "$csv$esc.newline$l.replaceAll('\n', ' ').trim()")#end
+
+##writes line to csv-string
+#macro(writeLine)
+#if($csv  == "")
+    #set($csv= $csvLine)
+#else
+    #set($csv  = "$csv$esc.newline$csvLine")
+#end
+    #set($csvLine = "")
+#end
+
 
 
 #set($facet_pivot_1= $params.get('facet_pivot_1'))
@@ -322,12 +348,18 @@
 	<thead>
     <tr>##titlerow, no sorting
         <th class="sorter-false" style="text-align:right" colspan="2">#displayfacetname($facet_pivot_1)</th>
+        #addValueToLine("#displayfacetname($facet_pivot_1) / #displayfacetname($facet_pivot_2)")
 
         <th class="rowtotal sorter-false " colspan="2">Gesamt</th>
+        #addValueToLine("Anzahl Gesamt")
+        #addValueToLine("Anteil Gesamt")
+
 
         #foreach($facet_value in $orderedfacetkeys)
             <th class="sorter-false"  #if($compare_query) colspan="2"#end>#displayfacetrange($facet_value)</th>
+            #addValueToLine("#displayfacetrange($facet_value)")
         #end
+        #writeLine()
 
         <th class="topicname sorter-false">
         </th>
@@ -396,20 +428,24 @@
 
     <tr>
         <th></th>
-        <th class="count">Seitenzahl pro #displayfacetname($facet_pivot_1):</th>
+        <th class="count">Seitenzahl je Gruppe:</th>
         <th class="count">$current_page_results_found</th>
         <th class="rowtotal"></th>
-
+        #addValueToLine("Gesamt")
+        #addValueToLine($current_page_results_found)
+        #addValueToLine(" ")
 
         #foreach($key in $orderedfacetkeys)
 
             <th class="sorter-percent  count" title="$key">$orderedfacetcounts[$key]</th>
+            #addValueToLine($orderedfacetcounts[$key])
             #if($compare_query)
 
                 #set($relative_count_column = $math.div($orderedfacetcounts[$key], $current_page_results_found))
                 <th class="sorter-percent count columnSelector-disable">#formatp($relative_count_column)</th>
             #end
         #end
+        #writeLine()
         <th></th>
 
     </tr>
@@ -424,8 +460,12 @@
          <td>$foreach.count</td>
 	    <td class="topicname"><a target="_blank" href="$base_url#{createFQ}($facet_pivot_2,$subfacetkey)">#displayfacetname($subfacetkey)</a></td>
 
+         #addValueToLine("#{displayfacetname}($subfacetkey)")
+
             #set($rowvalue=0)
 			#set($rowvalue = $math.div($orderedsubfacetcounts[$subfacetkey], $current_page_results_found))
+
+            #addValueToLine($orderedsubfacetcounts[$subfacetkey])
 
                 <td class="topicpercent rowtotal">
                     <a target="_blank" href="$base_url#{createFQ}($facet_pivot_2,$subfacetkey)"> $orderedsubfacetcounts[$subfacetkey]</a>
@@ -434,7 +474,7 @@
                 <td class="rowtotal">
                     #formatp($rowvalue)
                 </td>
-
+         #addValueToLine("#{formatp}($rowvalue)")
 
 
 			#foreach($key in $orderedfacetkeys)
@@ -459,6 +499,8 @@
                         "relative_count": 0.0})
                 #end
 
+
+
                     #set($subentry_titletext_abs = "<em>$subentry.count</em> in <em>#displayfacetname($subfacetkey)</em> und <em>#{displayfacetname}($key)</em><br/>#formatp($subentry.relative_count) von  insgesamt $orderedfacetcounts[$key] in #displayfacetname($key)")
 
                 #set($subentry_titletext_rel = "<em>#formatp($subentry.relative_count)</em> ($subentry.count) in <em>#displayfacetname($subfacetkey)</em> <br/>von insgesamt $orderedfacetcounts[$key] in <em>#displayfacetname($key)</em>")
@@ -471,17 +513,19 @@
 
 
                 #if(!$rel_values)
-                            <td class="topicpercent values1" title='$esc.html($subentry_titletext_abs)'>
-                                <a   href="$subentry.link" target="_blank">
-                                $subentry.count</a>
-                            </td>
-                        #else
-                            <td class="topicpercent values1" title='$esc.html($subentry_titletext_rel)'>
-                                <a href="$subentry.link" target="_blank">
-                                    #formatp($subentry.relative_count)</a>
-                            </td>
+                    <td class="topicpercent values1" title='$esc.html($subentry_titletext_abs)'>
+                        <a   href="$subentry.link" target="_blank">
+                        $subentry.count</a>
+                    </td>
+                    #addValueToLine($subentry.count)
+                #else
+                    <td class="topicpercent values1" title='$esc.html($subentry_titletext_rel)'>
+                        <a href="$subentry.link" target="_blank">
+                            #formatp($subentry.relative_count)</a>
+                    </td>
+                    #addValueToLine($subentry.relative_count)
 
-                   #end
+               #end
 
                     #if($compare_query)
                            ###set($association_strength = $math.div($subentry.count, $math.mul($orderedfacetcounts[$key], $rowvalue)))
@@ -497,13 +541,22 @@
 
 			 #end
          <td class="topicname"><a target="_blank" href="$base_url#{createFQ}($facet_pivot_2,$subfacetkey)">#displayfacetname($subfacetkey)</a></td>
+         #writeLine()
 
 	 </tr>
   	#end
 	</tbody>
  </table>
-<div> <a href="" class="selecttable">Tabelle ausw&auml;hlen</a> </div>
+#set($currentSelection = "#displaycurrentselection()")
+#addLineToCSV("${esc.newline}Aktuelle Auswahl,$currentSelection.replaceAll(',', '')")
+#addLineToCSV("Aktuelle Auswahl URL,#url_for_solr()/browse#lens()")
+#addLineToCSV("Indexversion,$core_version")
 
+    <form method="post" target="_blank" action="$data_loopback_url">
+        <input type="submit" class="pure-button button-xsmall" value="Werte als CSV exportieren"/>
+        <input type="hidden" name="data" value="$csv"/>
+    </form>
+   ## <textarea>$csv</textarea>
     #*
      #set($pvalue_ajdusted = $assoc.adjustAlpha($pvalue))
     #set($llhr_significance_treshold = $assoc.getChiSigLevel($pvalue))
@@ -514,6 +567,7 @@
 <p>* Signifikanz f&uuml;r p=$number.format($formatString, $pvalue) der Assoziation zwischen den Kategorien (beidseitig) nach <a href="http://tdunning.blogspot.de/2008/03/surprise-and-coincidence.html">Log-Likelihood-Ratio</a> - Log-Likelihood-Ratio > $number.format($llhr_significance_treshold)</p>
 <p>** Signifikanz f&uuml; p=$number.format($formatString, $pvalue_ajdusted) (Angepasst an Anzahl der in der Tabelle getroffenen Vergleiche durch Sidak-Correction - siehe <a href="http://wordhoard.northwestern.edu/userman/analysis-comparewords.html#loglike">WordHHoard User Manual</a>). Log-Likelihood-Ratio > $number.format($llhr_significance_treshold_adjusted)</p>
 
+
 #else
     Kategorien ausw&auml;hlen, um Vergleich zu berechnen.
         #set($pagetitle = "WdK-Vergleich nach Kategorien")
@@ -521,5 +575,11 @@
 #end
 
 
+
+
+
 </div>
+
+
+
 

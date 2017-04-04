@@ -1,5 +1,8 @@
 
 
+
+
+
 #set($queryterms = $esc.url($params.get('q')))
 
 #if(!$queryterms || "$!queryterms" == "")
@@ -25,6 +28,7 @@
 
 ##exclude junkf-filter from corpus-base-query
 #set($activeFilter = "")
+
 #if($params.getParams('fq'))
     #foreach($fq in $params.getParams('fq'))
         #if($fq.contains($defaultfilter))
@@ -55,7 +59,9 @@
 
 
 <div id="chartbox">
+
 <script>
+        #set($currentSelection = "#displaycurrentselection()")
 
 var chart_conf = {
 	baseurl: '#solrjson_pivot_stats_corpus_url_json()',
@@ -67,9 +73,13 @@ var chart_conf = {
 	groupfield_title : false,
     top_groups_no: 10,
     norelativevalues: false,
+    no_timefield_url: $esc.s#lens_No_CurrentFQ($timefacet)$esc.s,
 
 	statsonquery : false,
 
+    info_currentselection: $esc.s$currentSelection.replaceAll(",", "")$esc.s,
+    info_currentselection_url: $esc.s#url_for_solr()/browse#lens()$esc.s,
+    info_core_version: '$core_version',
 
 	stats_color : "#C14D00"
 
@@ -96,7 +106,7 @@ current_query_url = '${current_query_url}&v.template=browse_docs';
 #set($ct = $params.get('ct'))
 
 
-#set($statsfielddef = "&stats.field={!tag%3Dp+mean%3Dtrue}")
+#set($statsfielddef = "&stats.field={!tag%3Dp+mean%3Dtrue+stddev%3Dtrue}")
 #set($statsfieldurl = "")
 #set($statsfield = "")
 #set($statstitle = "")
@@ -226,6 +236,7 @@ jQuery(document).ready(function() {solrvis_lg_loadchart(chart_conf)});
 
     <h2  id="chartcontrols" class="collapse-button open">Diagramm f&uuml;r $chartname&nbsp;<img alt="statistik" src="#{url_for_solr}/admin/file?file=/velocity/img/stats.png&contentType=image/png"/></h2>
     <div id="chart" class="collapsible">
+
         <form action="#{url_for_solr}/browse"  method="get">
       #** <pre>
 chartShowTopics ? $!chartShowTopics
@@ -268,6 +279,7 @@ statsfield ? $statsfield
 
     <div id="chartlegendcontainer">
 
+
         <div id="chartlegendresizable">
 
             <div id="chartlegend">
@@ -296,6 +308,9 @@ statsfield ? $statsfield
 
 
     </div>
+        </form>
+        <form id="download-form" method="post" target="_blank" action="$data_loopback_url">
+            <input type="button" class="pure-button button-xsmall" value="Zeitverlauf als CSV exportieren"/>
         </form>
 </div>
 

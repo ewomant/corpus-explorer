@@ -17,6 +17,7 @@
       #end
     #end
 		<input type="hidden" name="wt" value="csv"/>
+		<input type="hidden" name="v.contentType" value="text/csv"/>
      #if($response_grouped_document)
       	 <input type="hidden" name="group.main" value="true"/>
 		  <input type="hidden" name="fl" value="${groupfield},${bookfield},${booktitlefield},${authornamefield},$publisherfield,${publicationplacefield},${timefacet}${addsortfield}"/>

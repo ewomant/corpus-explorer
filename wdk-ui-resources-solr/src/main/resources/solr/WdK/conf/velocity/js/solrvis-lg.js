@@ -3,7 +3,7 @@
 var main_jd = [];
 var main_jd_smooth = [];
 
-
+var currentKeys = [];
 
 var secondlevel_jd = [];
 var secondlevel_jd_totals = []
@@ -13,6 +13,9 @@ var totalsPivot2 = new Array();
 
 var totalsNumFound = 0;
 var currentNumFound = 0;
+
+var currentExtent = [];
+var totalsExtent = [];
 
 var fieldTitles = {};
 
@@ -71,9 +74,11 @@ var cs;
 var maxNumberOfGroups = 100;
 
 //add endsWith function for explorer
-String.prototype.endsWith = function(suffix) {
-    return this.indexOf(suffix, this.length - suffix.length) !== -1;
-};
+if (!String.prototype.endsWith) {
+    String.prototype.endsWith = function (suffix) {
+        return this.indexOf(suffix, this.length - suffix.length) !== -1;
+    };
+}
 
 //add find for explorer
 // https://tc39.github.io/ecma262/#sec-array.prototype.find
@@ -256,8 +261,12 @@ function loadChart(){
             }
 
 
-			totalsPivot2 = parsePivotData(dataTotal, cs.groupfield, cs.statsfield, false);
+			totalsPivot2 = parsePivotData(dataTotal, cs.timefield, cs.groupfield, cs.statsfield);
+
             console.log('data totals parsed, ' + dataTotal.length + " datapoints");
+
+            totalsExtent = d3.extent(totalsPivot2, function(e){return e.fieldvalue});
+            totalsPivot2 = fillYears(totalsPivot2);
 
              overallmean_topics_totals = parseStatsFields(dataTotal, cs.statsfield) ;
 
@@ -285,7 +294,7 @@ function loadChart(){
 
 							console.log('data current parsed, ' + main_jd.length + " datapoints");
 
-
+                            currentExtent =  d3.extent(main_jd, function(e){return e.fieldvalue});
 							main_jd = fillYears(main_jd);
 
 
@@ -463,6 +472,7 @@ function fillYears(array){
 	var firstyear = array[0]['fieldvalue'];
 	var lastyear = array[array.length-1]['fieldvalue'];
 
+    console.log("extends from " + firstyear + " to " + lastyear);
 
 
 	if(firstyear == null || firstyear == ""){
@@ -562,18 +572,18 @@ function drawChart(){
 
 //add count: "Seiten" - make temporal copy of array, keep original for new combinations
     fieldTitles = {};
-
+    fieldTitles.count = "Treffer";
+    fieldTitles.count_rel = "% Treffer pro Jahr";
 
     var keys = [];
 
 
+
     if(show_absolute){
-        fieldTitles.count = "Treffer";
         keys.push('count');
         var addFieldTitlesCount = fieldTitles_pivot_count;
 
     }else{
-        fieldTitles.count_rel = "% Treffer pro Jahr";
         var addFieldTitlesCount = fieldTitles_pivot_count_rel;
         keys.push('count_rel');
     }
@@ -600,6 +610,8 @@ function drawChart(){
             }
     }
 
+    currentKeys = keys;
+    //console.log(currentKeys);
 
    // addGroupStatsToFieldTitles(fieldTitles);
 
@@ -718,12 +730,15 @@ c3chartsettings = {
 	console.log(c3chartsettings);
 	chart = c3.generate( c3chartsettings );
 
+
     function toggle(id) {
         chart.toggle(id);
     }
     //console.timeEnd("drawChart()");
 
     createTabularLegend(chart, keys, fieldTitles);
+
+    enableCSVDownload("download-form" );
 }
 
 
@@ -834,10 +849,21 @@ function createTabularLegend(chart, keys, fieldTitles) {
     legendContainer.data([keys[0]]).insert('h2', '#groupselector_box').attr("id",
         id_legendHeading).each(function (id) {
         insertLegendField(id, this,
-            currentNumFound + " Seiten / "
-            + pf(currentNumFound / totalsNumFound) + " des gesamten Korpus in diesem Zeitraum");
+            currentNumFound + " Seiten (" + currentExtent[0] + "-" + currentExtent[1] +") | "
+            + pf(currentNumFound / totalsNumFound) + " des gesamten Korpus " + totalsExtent[0] + "-" + totalsExtent[1] +")");
     });
 
+
+        if( totalsExtent[0] < currentExtent[0]  ||  totalsExtent[1] > currentExtent[1]  ){
+            console.log("Korpuszeitraum > Anfragezeitraum:")
+            legendContainer.insert("a", '.'+legendTable)
+                .html("Korpuszeitraum ist gr&ouml;&szlig;er Anfragezeitraum: Anfrage filtern auf Anfragezeitraum "
+                    +currentExtent[0] + " bis " + currentExtent[1] + "?" )
+                .attr('href', chart_conf.no_timefield_url+"&fq=" + chart_conf.timefield + ":["
+                        +currentExtent[0]+"+TO+"+currentExtent[1]+"]")
+                .attr('class', 'extensionLink');
+        }
+        //no_timefield_url
 
 
 
@@ -857,12 +883,14 @@ function createTabularLegend(chart, keys, fieldTitles) {
     // recreate topic_id by removing slg.STATS from key topicnames[sf]
 
 
+
     if (show_stats && !show_groups){
 
         thr.insert('th').text('Topic');
         thr.insert('th').html('&oslash;Topic-Intensit&auml;t');
         thr.insert('th').html('&oslash;Topic-Intensit&auml;t im gesamten Korpus/Zeitraum')
             .attr('title', '&oslash;Topic-Intensit&auml;t im gesamten Korpus f&uumlr diesen Zeitraum');
+
 
 
 
@@ -909,7 +937,7 @@ function createTabularLegend(chart, keys, fieldTitles) {
                   .attr('title', 'Anteil der Treffer (Seitenzahl) in der Gruppe')
                   .attr('width', "15%");
 
-            thr.insert('th').html('+/- %p realtiv zu Korpus' + pf(currentNumFound/totalsNumFound)+ ')')
+            thr.insert('th').html('+/- %p relativ zu Korpus (' + pf(currentNumFound/totalsNumFound)+ ')')
                 .attr('title', 'Trefferanteil in der Gruppe ist um x Prozentpunkte' +
                     ' h&ouml;her/niedriger  als im gesamten Korpus f&uuml;r diesen Zeitraum')
                 .attr('width', "25%");
@@ -922,7 +950,7 @@ function createTabularLegend(chart, keys, fieldTitles) {
             var fieldDataTotals = secondlevel_jd_totals.find(function(e){ return e.fieldid  == fieldid; });
 
             //console.log(id);
-            console.log(secondlevel_jd);
+            //console.log(secondlevel_jd);
 
             if(fieldData) {
 
@@ -1061,9 +1089,7 @@ function createTabularLegend(chart, keys, fieldTitles) {
         $("#chartlegendcontainer")
                 .resizable({
                     handles: 's',
-
                     //maxHeight: max_resize_height,
-
                     stop: function(event, ui) {
                         var size = ui.size.height -10;
                         if(size >= topicbox_size){
@@ -1373,4 +1399,151 @@ function addOrRemove(array, value) {
     } else {
         array.splice(index, 1);
     }
+}
+
+function removeFromArray(array, value) {
+    var index = array.indexOf(value);
+    if (index !== -1) {
+        array.splice(index, 1);
+    }
+}
+
+function enableCSVDownload( elementId){
+
+
+
+    // display the form/button, which is initially hidden
+    d3.select("#"+elementId).style("display", "block");
+
+    d3.select("#"+elementId + " input[type=button]").on('click', function() {
+
+        var csv = convertChartToCsv();
+
+        var downloadForm = d3.select("#"+elementId);
+        // remove any existing hidden fields, because maybe the data changed
+        downloadForm.selectAll("input[type=hidden]").remove();
+        downloadForm
+            .each(function() {
+                d3.select(this).append("input")
+                    .attr({ type:  "hidden",
+                        name:  "data",
+                        value: csv  });
+            });
+
+        document.getElementById(elementId).submit();
+    });
+
+}
+function convertChartToCsv() {
+
+    var keys = d3.keys(fieldTitles);
+
+    //remove to be able to put them at the first location
+    var firstKeys = ["fieldvalue", "count", "count_rel" ];
+    var columntitles = ["Quelle", "Jahr", "Anzahl", "Anzahl relativ"];
+    firstKeys.forEach(function(k){
+        removeFromArray(keys, k);
+    });
+    keys.forEach(function(k){
+        columntitles.push(fieldTitles[k]? fieldTitles[k].replace(",", "\,").replace("\n", " ") : k );
+    });
+
+    allKeys = firstKeys.concat(keys);
+
+
+    console.log("save data as csv");
+    console.log(keys);
+    console.log(main_jd);
+    console.log(totalsPivot2);
+
+    var csvArray = [columntitles.join(",")];
+    var lineJoint = ["Treffer", currentExtent[0] + " bis " + currentExtent[1], currentNumFound, currentNumFound/totalsNumFound]
+    var lineJointTotals = ["Korpus", totalsExtent[0] + " bis " + totalsExtent[1], totalsNumFound, 1]
+
+
+    if (show_stats && !show_groups){
+          keys.forEach(function(k) {
+            lineJoint.push(overallmean_topics[key]);
+            lineJointTotals.push(overallmean_topics_totals[key]);
+        });
+    }else if(show_groups && !show_stats ){
+
+        keys.forEach(function(id) {
+
+            var fieldid = id.replace(slg.COUNT_REL, "").replace(slg.ABS, "");
+            var fieldData = secondlevel_jd.find(function(e){ return e.fieldid  == fieldid; });
+            console.log(id);
+            console.log(fieldData);
+            if(fieldData) {
+                lineJoint.push(fieldData.count);
+            }else{
+                lineJoint.push("");
+            }
+
+            var fieldDataTotals = secondlevel_jd_totals.find(function(e){ return e.fieldid  == fieldid; });
+            if(fieldDataTotals) {
+                lineJointTotals.push(fieldDataTotals.count);
+            }else{
+                lineJointTotals.push("");
+            }
+
+        });
+
+    }else if(show_groups && show_stats){
+        lineJoint.push(overallmean_topics[cs.statsfield[0]+slg.TOPIC_MEAN]);
+        lineJointTotals.push(overallmean_topics_totals[cs.statsfield[0]+slg.TOPIC_MEAN]);
+        var dataKeys = keys.slice(1);
+        dataKeys.forEach(function(id) {
+
+            var fieldid = id.replace(slg.STATS, "");
+            var fieldData = secondlevel_jd.find(function(e){
+                return e.fieldid  == fieldid; });
+            if(fieldData){
+                console.log(fieldData);
+                lineJoint.push( fieldData[cs.statsfield[0]+slg.TOPIC_MEAN]);
+            }else{
+                lineJoint.push("");
+            }
+
+            var fieldDataTotals = totalsPivot2.find(function(e){
+                return e.fieldid  == fieldid; });
+            if(fieldDataTotals){
+                lineJointTotals.push( fieldDataTotals[cs.statsfield[0]+slg.TOPIC_MEAN]);
+            }else{
+                lineJointTotals.push("");
+            }
+
+        });
+    }
+    csvArray.push(lineJoint.join(","));
+
+    main_jd.forEach(function(d) {
+        var line = ["Treffer"];
+
+        allKeys.forEach(function(k){
+            line.push(d[k]);
+        });
+        csvArray.push(line.join(","));
+    });
+
+    csvArray.push(lineJointTotals.join(","));
+    totalsPivot2.forEach(function(d) {
+        var line = ["Korpus"];
+        allKeys.forEach(function(k){
+            line.push(d[k]);
+        });
+        csvArray.push(line.join(","));
+    });
+    //Add info about selection
+    csvArray.push("\nAktuelle Auswahl," + chart_conf.info_currentselection);
+    csvArray.push("Aktuelle Auswahl URL," +chart_conf.info_currentselection_url);
+    csvArray.push("Indexversion," +chart_conf.info_core_version);
+    //d3.select("#chartbox").append("textarea").text(csvArray.join("\n")).attr("style", "width:100%;min-height:20em;");
+    return csvArray.join("\n");
+}
+
+function extension(array){
+    var firstyear = array[0]['fieldvalue'];
+    var lastyear = array[array.length-1]['fieldvalue'];
+    return [firstyear, lastyear];
 }

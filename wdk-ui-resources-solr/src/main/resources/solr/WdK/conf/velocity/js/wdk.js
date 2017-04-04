@@ -737,3 +737,5 @@ function createWordCloud(facet_id, words){
 }
 
 
+
+

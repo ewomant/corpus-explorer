@@ -95,7 +95,7 @@ $field $timefacet_grouped $range_pivot<br/>
                 #if($facet_pivot_2.equals($additional_statsfacet) || $facet_pivot_1.equals($additional_statsfacet))
                     ##<label for="facet.limit.$additional_statsfacet"> Anzahl #displayfacetname($additional_statsfacet):</label>
                    <select name="f.${additional_statsfacet}.facet.limit">
-                    #foreach($number in $termnumbers_stats)
+                    #foreach($number in $termnumbers)
                         <option #if($params.get("f.${additional_statsfacet}.facet.limit")==$number) selected #end>$number</option>
                     #end
                    </select>

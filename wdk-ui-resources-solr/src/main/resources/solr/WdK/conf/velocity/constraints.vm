@@ -5,6 +5,8 @@
 
 #if($selected_filter_queries.size() > 0 || ($currentQuery.size() > 0 &&  $currentQuery[0] != ''))
 <div class="constraints" #annTitle("Anfragen und Filter aufz&auml;hlen.  Klicken um zu entfernen")>
+    <a class="restart pure-button sl" href="#url_for_home#if($request.params.get('debugQuery'))?debugQuery=true#end">Auswahl aufheben</a>
+
     <div class="qfqs">   <h2 >Aktuelle Auswahl:</h2>
 
         #if($currentQuery.size() > 0 &&  $currentQuery[0] != '')
@@ -61,6 +63,5 @@
     </div>
 #end
 </div>
-
 
 

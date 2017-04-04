@@ -342,15 +342,7 @@ $text.toString().replace('[', '').replace(']', '')
 
 #macro(join_strings $strings $seperator)#foreach($string in $strings)$string#if($velocityHasNext)$seperator#end#end#end
 
-#macro(displayfacetname $afieldname)
-#set($newfacetname = $afieldname)#set($i = 0)##
-#foreach ($facetkeyname in $facetkeynames)##
-	#if($afieldname.startsWith($facetkeyname))##
-	#set($newfacetname = $facetnames[$i])##
-#end
-	#set($i = $i+1)##
-#end
-#set($newfacetname = $facet_query_names[$newfacetname])#displayfacetrange("#displaytopicmodelname($newfacetname)")#end
+#macro(displayfacetname $afieldname)#set($newfacetname = $afieldname)#set($i = 0)#foreach ($facetkeyname in $facetkeynames)#if($afieldname.startsWith($facetkeyname))#set($newfacetname = $facetnames[$i])#end#set($i = $i+1)#end#set($newfacetname = $facet_query_names[$newfacetname])#displayfacetrange("#displaytopicmodelname($newfacetname)")#end
 
 #macro(displayfacetrange $aFieldname)
 #if(($aFieldname.startsWith("[") || $aFieldname.startsWith("{")) && ($aFieldname.endsWith("]") || $aFieldname.endsWith("}") )&& $aFieldname.contains("TO"))##
@@ -371,36 +363,15 @@ $aFieldname.substring(1, $math.sub($aFieldname.length(),1)).replaceFirst("TO", "
 #end
 
 
-#macro(displaycurrentselection)
- #set($currentQuery = $params.getParams('q'))
-  #if($params.getParams('fq') || ($currentQuery.size() > 0 &&  $currentQuery[0] != ''))
-    <div class="constraints" #annTitle("Lists out the &fq filters.  Click to remove.")>
-     Aktuelle Auswahl:
-      #if($currentQuery.size() > 0 &&  $currentQuery[0] != '')
-		<i>Anfrage:</i>$currentQuery[0]
-     #end
-   #if($params.getParams('fq'))
-      #foreach($fq in $params.getParams('fq'))
-        #set($previous_fq_count=$velocityCount - 1)
-        #set($facetName = $fq)
-        #if($fq != '')
-          #if($facet_query_names[$fq])
-          	#set($facetName = $facet_query_names[$facetName])##fuer predefined filter-queries - bleibt, wenn nicht vorhanden
-       	  #else
-         	 ##fq split an : , dann displayfacetname und zusammensetzen
-         	 #set($selection = $fq.split(":"))
-              #if($selection.size() > 1)
-                  #set($facetName = "<i>#displayfacetname($selection[0])</i>" + ":" + $selection[1])
-              #end
-
-          #end
-          &gt;&nbsp;$facetName
-        #end
-      #end
-    #end
-    </div>
-#end
-#end
+#macro(displaycurrentselection)##
+    #set($currentQuery = $params.getParams('q'))##
+#if($selected_filter_queries.size() > 0 || ($currentQuery.size() > 0 &&  $currentQuery[0] != ''))##
+#if($currentQuery.size() > 0 &&  $currentQuery[0] != '')##
+Anfrage:$currentQuery[0]#end##
+#foreach($field in $sort.sort($selected_filter_queries.keySet()))##
+#set($filter = $selected_filter_queries[$field])##
+#if(($velocityCount - $selected_topicfilters.size()) != 1)>#end##
+$filter['field_name'] >#end#end#end##
 
 
 ##create query

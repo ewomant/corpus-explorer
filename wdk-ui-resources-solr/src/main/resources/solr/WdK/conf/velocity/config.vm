@@ -250,6 +250,12 @@ Schulformen_opac: Gymnasium
 ##the field-value used with paramter ct (currentTopic) when topics are selected but no topic-stats should be displayed
 #set($noTopicParam = "__noTopic__")
 
+##sets url that mirrors data send to it - used to provide clientside json or csv as a download
+#set($data_loopback_url = "#{url_for_solr}/browse?v.template=download_csv&rows=0&facet=false&v.layout.enabled=false&v.contentType=text/csv")
+
+
 ##current version of the corpus/index. Each core is documented in doc/core - the documentation is displayed in the footer of every page. Needs to be adapted for every
 #set($core_version = "07_03")
 #parse("doc/core_${core_version}.vm")
+
+

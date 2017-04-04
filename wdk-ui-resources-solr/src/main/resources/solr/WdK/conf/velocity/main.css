@@ -71,7 +71,7 @@ em{
 
 
 a {
-  color: #43a4b1;
+  color: #0e4776;
 }
 
 h2{
@@ -239,7 +239,17 @@ h1 em{
     border-radius: 2px;
 }
 
-
+body .constraints a.restart{
+    background-color: #777;
+    color:white;
+    font-size: 80%;
+    padding:2px;
+    border-radius: 2px;
+    margin: 3px;
+    display:block;
+    float:right;
+    text-align: center;
+}
 
 #query-form{
   margin-bottom:0em;
@@ -1278,7 +1288,7 @@ background-image: url(../admin/file?file=/velocity/img/right-arrow-white.png&con
 #chartcontainer{
     height: 250px;
 	width: 100%;
-    padding: 1em 0;
+    padding: 1em 0 2em;
 }
 #chartresizable{
     margin: 1em 0;
@@ -1400,14 +1410,16 @@ padding: 5px;
     padding: 0;
 }
 
+#chartlegendresizable .extensionLink{
+    display: block;
+    font-style: italic;
+}
 
 #chartlegendresizable .legendControls button{
     margin:1px;
 }
 
-#groupselector_box{
-    float:left;
-}
+
 
 #chartlegend thead th{
 text-align: left;
@@ -1470,6 +1482,16 @@ opacity:0.6;
 #chartlegend .legendItemTempFocused{
 color:#333;
 
+}
+#chart form{
+    margin: 0em;
+}
+#download-form{
+    display: none;
+    margin: 0.1em;
+}
+#download-form button{
+    padding: 2px;
 }
 
 a.active{
@@ -1570,6 +1592,10 @@ body .ui-tooltip-content{
 
 body .pure-button{
 	vertical-align: middle;
+    color: rgba(0,0,0,1);
+}
+body .pure-button-primary, body .pure-button-selected, body a.pure-button-primary, body a.pure-button-selected{
+    color: #fff;
 }
 body .pure-button img{
 	vertical-align: middle;
@@ -1723,3 +1749,4 @@ body .pure-form input[type="text"], body  .pure-form input[type="password"], bod
     box-shadow: inset 0 1px 1px #ddd;
     padding: .4375em .6em; !important
 }
+
