@@ -1,5 +1,9 @@
 #WdK Corpus-Explorer
 
+##Dependencies
+In order to resolve dependencies of DKPro-Core in Maven you need to configure both the DKPro `public-releases`- and `public-snapshots`-Repositories as explained here: https://dkpro.github.io/dkpro-core/pages/setup-maven/ 
+
+
 ## Preprocessing
 
 The class [PreprocessWdk](wdk-core-preprocessing/src/main/java/de/tudarmstadt/ukp/experiments/wdk/preprocessing/PreprocessWdk.java) reads
