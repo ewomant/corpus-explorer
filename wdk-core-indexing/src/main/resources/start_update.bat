@@ -13,5 +13,5 @@
 :: "Inhalt_Raum_Thema_wdk", "Inhalt_Zeit_wdk", "Jahr der Erstauflage_wdk",
 :: "Forschungskorpus_WdK"
 ::Starting Update - this may take a while...
-java -m 3g -jar wdk-core-indexing.jar  'D:\Dokumente\_wdk\owncloud-gei\Shared\Welt-der-Kinder\Metadaten HIWIS NEU\WDK_v3_31032017_MW-xls.csv' http://localhost:8983/solr/WdK.dev/
+java -Xmx3072M -jar wdk-core-indexing.jar  'D:\Dokumente\_wdk\owncloud-gei\Shared\Welt-der-Kinder\Metadaten HIWIS NEU\WDK_v3_31032017_MW-xls.csv' http://localhost:8983/solr/WdK.dev/
 PAUSE
