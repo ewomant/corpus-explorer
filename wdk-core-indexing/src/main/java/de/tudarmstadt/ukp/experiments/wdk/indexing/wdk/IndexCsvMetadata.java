@@ -18,10 +18,8 @@ import org.apache.solr.common.SolrInputDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.Reader;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -113,8 +111,11 @@ public class IndexCsvMetadata
             /* iterate over fields to index */
             for (String fieldName : FIELDS_TO_INDEX) {
                 if (csvRecord.isSet(fieldName)) {
+
+                    LOGGER.debug(fieldName + ":" + csvRecord.get(fieldName));
+
                     /* split multiple values in a cell */
-                     String[] values = csvRecord.get(fieldName).split(MULTIVALUE_FIELD_SEPARATOR);
+                    String[] values = csvRecord.get(fieldName).split(MULTIVALUE_FIELD_SEPARATOR);
                     List<Object> valueList = new ArrayList<>(values.length);
 
                     /* iterate over (multiple) values within field */
@@ -227,7 +228,8 @@ public class IndexCsvMetadata
             LOGGER.info("Solr index has " + numDocuments + " documents.");
 
             LOGGER.info("Reading CSV file: " + csv_file);
-            Reader csvReader = new FileReader(csv_file);
+
+            Reader csvReader = new InputStreamReader(new FileInputStream(csv_file), StandardCharsets.UTF_8);
             CSVParser parser = CSVFormat.DEFAULT
                 .withHeader()
                 .parse(csvReader);
