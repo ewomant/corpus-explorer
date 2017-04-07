@@ -1044,7 +1044,10 @@
             <str name="f.goobi_PublicationYear.facet.range.other">between</str>
 
 
-
+            <str name="facet.range">{!ex=Jahr_Erstauflage_wdk}Jahr_Erstauflage_wdk</str>
+            <str name="f.Jahr_Erstauflage_wdk.facet.range.start">1850</str>
+            <str name="f.Jahr_Erstauflage_wdk.facet.range.end">1918</str>
+            <str name="f.Jahr_Erstauflage_wdk.facet.range.gap">10</str>
 
 
             <str name="facet.field">{!ex=goobi_singleDigCollection}goobi_singleDigCollection</str>
@@ -1057,7 +1060,7 @@
             <str name="facet.field">{!ex=Schultyp_wdk}Schultyp_wdk</str>
             <str name="facet.field">{!ex=Schulformen_opac}Schulformen_opac</str>
             <str name="facet.field">{!ex=Schulbuchtyp_wdk}Schulbuchtyp_wdk</str>
-            <str name="facet.field">{!ex=Erstauflage_wdk}Jahr der Erstauflage_wdk</str>
+
             <str name="facet.field">{!ex=Bildungsstufe_opac}Bildungsstufe_opac</str>
 
             <str name="facet.field">{!ex=goobi_PlaceOfPublication}goobi_PlaceOfPublication</str>

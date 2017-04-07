@@ -132,9 +132,15 @@ $(document).ready(function() {
 
 
 
-    $("#customyear").submit(function (event) {
+    $(".customyear").submit(function (event) {
         event.preventDefault();
-        var url = $("#PublicationYearUrl").val() + "&fq={!tag%3D" + timefacetfield + "}" + timefacetfield + ":[" + $("#PublicationYearFrom").val() + "+TO+" + $("#PublicationYearTo").val() + "]";
+        console.log("customyear submitted ");
+        console.log(this);
+
+        var timefacetfield = $(".timefield", this).val();
+        console.log(timefacetfield);
+
+        var url = $(".RangeYearUrl", this).val() + "&fq={!tag%3D" + timefacetfield + "}" + timefacetfield + ":[" + $(".RangeYearFrom", this).val() + "+TO+" + $(".RangeYearTo", this).val() + "]";
         console.log(url);
         window.location.replace(url);
 

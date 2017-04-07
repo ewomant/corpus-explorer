@@ -64,7 +64,7 @@ public class IndexCsvMetadata
             "Ort_wdk", "Schultyp_wdk", "Geschlecht_wdk", "Ort_erste_angabe_wdk", "Verlag_wdk",
             "Konfession_wdk", "Afz_wdk", "Schultyp_Allg_wdk", "Schulbuchtyp_wdk",
             // new in metadata version from Apr 13, 2016:
-            "Inhalt_Raum_Thema_wdk", "Inhalt_Zeit_wdk", "Jahr der Erstauflage_wdk",
+            "Inhalt_Raum_Thema_wdk", "Inhalt_Zeit_wdk", "Jahr_Erstauflage_wdk",
             // new in metadata version from Nov 07, 2016:
             "Forschungskorpus_WdK"
     };
@@ -82,7 +82,7 @@ public class IndexCsvMetadata
      */
     private static final String TARGET_ID_FIELD = "goobi_CatalogIDDigital";
     private static SolrClient solrClient;
-    private static Set<String> INT_FIELDS = Sets.newHashSet("Afz_wdk");
+    private static Set<String> INT_FIELDS = Sets.newHashSet("Afz_wdk", "Jahr_Erstauflage_wdk");
     private static Set<String> MULTIVALUE_FIELDS = Stream.of(
             new String[] { "Schultyp_wdk", "Schultyp_Allg_wdk", "Schulformen_opac" })
             .collect(Collectors.toSet());

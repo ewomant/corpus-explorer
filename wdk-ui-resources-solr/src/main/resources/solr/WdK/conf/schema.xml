@@ -153,10 +153,12 @@
    <field name = "Schulformen_opac_n" type="int" indexed="true" stored="true" multiValued="false" />
 
 
+
 	<!-- Metadata fields -->
    <dynamicField name="goobi_*" type="string" indexed="true" stored="true" multiValued="true"/>
 <!--    <field name="CatalogIDDigital" type="string" indexed="true" stored="true" multiValued="true" /> -->
    <field name="goobi_PublicationYear" type="int" indexed="true" stored="true" multiValued="false" />
+
    <field name="goobi_TitleDocMain" type="text_de" indexed="true" stored="true" multiValued="true" />
 <!--    <field name="TSL_ATS" type="string" indexed="true" stored="true" multiValued="true" /> -->
    <field name="goobi_CreatorsAllOrigin" type="text_de" indexed="true" stored="true" multiValued="true" />
@@ -168,6 +170,8 @@
    <field name="divType" type="string" indexed="true" stored="true" multiValued="true" />
    <field name="divId" type="string" indexed="true" stored="true" multiValued="true" />
   <field name="Forschungskorpus_WdK" type="string" indexed="true" stored="false" multiValued="true"/>
+
+    <field name="Jahr_Erstauflage_wdk" type="int" indexed="true" stored="true" multiValued="false" />
 
 	<!--  Character statistics -->
 	<field name="totalChars" type="int" indexed = "true" stored="true" multiValued="false" />
