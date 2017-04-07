@@ -46,13 +46,16 @@ public class IndexCsvMetadata
     /**
      * Location of the CSV file containing the fields
      */
-    private static final File CSV_FILE = new File(
-            "/home/schnober/weltderkinder/owncloud/Shared/Welt-der-Kinder/Metadaten HIWIS NEU/WDK_v3_04112016_MF-xls.csv");
+    //private static final File CSV_FILE = new File(
+    //        "/home/schnober/weltderkinder/owncloud/Shared/Welt-der-Kinder/Metadaten HIWIS NEU/WDK_v3_04112016_MF-xls.csv");
+    private static File csv_file = new File(
+            "D:/Dokumente/_wdk/owncloud-gei/Shared/Welt-der-Kinder/Metadaten HIWIS NEU/WDK_v3_31032017_MW-xls.csv");
 
     /**
      * Location of the Solr server.
      */
-    private static final String SOLR_URL = "http://localhost:8983/solr/wdk.07.03/";
+    //private static final String SOLR_URL = "http://localhost:8983/solr/wdk.07.03/";
+    private static String solr_url = "http://localhost:8983/solr/WdK.dev/";
 
     /**
      * Names of the fields to add to index. They are read from the CSV header line and added to the
@@ -99,7 +102,7 @@ public class IndexCsvMetadata
     private static void updateSolrDocuments(CSVRecord csvRecord)
             throws SolrServerException, IOException
     {
-        LOGGER.debug("Updating document PPN" + csvRecord.get("PPN"));
+        LOGGER.debug("Updating document PPN" + csvRecord.get(SOURCE_ID_FIELD));
 
         /* iterate over documents with matching PPN */
         for (SolrDocument document : searchSolrDocuments(
@@ -111,7 +114,7 @@ public class IndexCsvMetadata
             for (String fieldName : FIELDS_TO_INDEX) {
                 if (csvRecord.isSet(fieldName)) {
                     /* split multiple values in a cell */
-                    String[] values = csvRecord.get(fieldName).split(MULTIVALUE_FIELD_SEPARATOR);
+                     String[] values = csvRecord.get(fieldName).split(MULTIVALUE_FIELD_SEPARATOR);
                     List<Object> valueList = new ArrayList<>(values.length);
 
                     /* iterate over (multiple) values within field */
@@ -195,8 +198,8 @@ public class IndexCsvMetadata
     private static void initServer()
             throws SolrServerException, IOException
     {
-        LOGGER.info("Using Solr server at " + SOLR_URL);
-        solrClient = new ConcurrentUpdateSolrClient(SOLR_URL, SOLR_QUEUE_SIZE, N_THREADS);
+        LOGGER.info("Using Solr server at " + solr_url);
+        solrClient = new ConcurrentUpdateSolrClient(solr_url, SOLR_QUEUE_SIZE, N_THREADS);
         SolrPingResponse answer = solrClient.ping();
         if (answer.getStatus() != 0) {
             throw new SolrServerException("Solr server not ready. Status: " + answer.toString());
@@ -204,50 +207,62 @@ public class IndexCsvMetadata
     }
 
     public static void main(String[] args)
-            throws IOException, SolrServerException
-    {
-        initServer();
-        numDocuments = totalNumberOfDocs(solrClient);
-        LOGGER.info("Solr index has " + numDocuments + " documents.");
+            throws IOException, SolrServerException {
 
-        LOGGER.info("Reading CSV file: " + CSV_FILE);
-        Reader csvReader = new FileReader(CSV_FILE);
-        CSVParser parser = CSVFormat.DEFAULT
+        if (args.length == 2) {
+            csv_file = new File(args[0]);
+            solr_url = args[1];
+        } else if (args.length > 0) {
+            System.out.println("Usage: \"Full_path_to_csv_file\" \"solr_url\" (Quotes necessary if path or url includes spaces");
+            System.out.println("Using default files and url");
+        }
+
+        System.out.println("Using csv_file in: " + csv_file.getAbsolutePath());
+        System.out.println("Using URL for Solr: " + solr_url);
+
+
+
+            initServer();
+            numDocuments = totalNumberOfDocs(solrClient);
+            LOGGER.info("Solr index has " + numDocuments + " documents.");
+
+            LOGGER.info("Reading CSV file: " + csv_file);
+            Reader csvReader = new FileReader(csv_file);
+            CSVParser parser = CSVFormat.DEFAULT
                 .withHeader()
                 .parse(csvReader);
 
-        LOGGER.info("Updating index...");
-        int csvCount = 0;
-        for (CSVRecord csvRecord : parser) {
-            // TODO log interval
-            csvCount++;
-            updateSolrDocuments(csvRecord);
-        }
-        LOGGER.info(csvCount + " records found for updating.");
-        LOGGER.info(String.format("%d documents input, %d not found.", countSearches, countMisses));
-
-        parser.close();
-        csvReader.close();
-
-        LOGGER.info("Committing changes to Solr server...");
-        solrClient.commit(false, false);
-
-        if (OPTIMIZE) {
-            LOGGER.info("Optimizing index...");
-            UpdateResponse response = solrClient.optimize();
-            int status = response.getStatus();
-            if (status == 0) {
-                LOGGER.info("Optimization successful.");
+            LOGGER.info("Updating index...");
+            int csvCount = 0;
+            for (CSVRecord csvRecord : parser) {
+                // TODO log interval
+                csvCount++;
+                updateSolrDocuments(csvRecord);
             }
-            else {
-                LOGGER.warn("A problem occurred during optimization. Server responded status "
+            LOGGER.info(csvCount + " records found for updating.");
+            LOGGER.info(String.format("%d documents input, %d not found.", countSearches, countMisses));
+
+            parser.close();
+            csvReader.close();
+
+            LOGGER.info("Committing changes to Solr server...");
+            solrClient.commit(false, false);
+
+            if (OPTIMIZE) {
+                LOGGER.info("Optimizing index...");
+                UpdateResponse response = solrClient.optimize();
+                int status = response.getStatus();
+                if (status == 0) {
+                    LOGGER.info("Optimization successful.");
+                } else {
+                    LOGGER.warn("A problem occurred during optimization. Server responded status "
                         + status);
+                }
+            } else {
+                LOGGER.info("Index not optimized.");
             }
-        } else {
-            LOGGER.info("Index not optimized.");
-        }
 
-        solrClient.close();
+            solrClient.close();
     }
 
 }

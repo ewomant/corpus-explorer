@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Main-Class: de.tudarmstadt.ukp.experiments.wdk.indexing.wdk.IndexCsvMe
+ tadata
+
