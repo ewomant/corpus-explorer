@@ -100,6 +100,36 @@
                     "Schultyp_wdk Anzahl Werte",
                     "Forschungskorpus_WdK",
                     "Schulform_opac"])
+#set($facet_descriptions ={
+    "goobi_PublicationYear" : "desc",
+    "goobi_singleDigCollection": "desc",
+    "goobi_PublisherName": "desc",
+    "goobi_TitleDocMainShort": "desc",
+    "document": "desc",
+    "goobi_PlaceOfPublication": "desc",
+    "goobi_TitleDocMainShort_Compl": "desc",
+    "Verlag_wdk": "desc",
+    "namedentities_per": "desc",
+    "namedentities_loc": "desc",
+    "namedentities_org": "desc",
+    "namedentities_misc": "desc",
+    "years": "desc",
+    "Afz_wdk": "desc",
+    "Inhalt_Raum_Thema_wdk": "desc",
+    "Inhalt_Zeit_wdk": "desc",
+    "goobi_Author.displayName": "desc",
+    "goobi_Editor.displayName": "desc",
+    "page": "desc",
+    "Afz_wdk": "desc",
+    "text": "desc",
+    "divType": "desc",
+    'Schulbuchtyp_wdk': "desc",
+    "Jahr der Erstauflage_wdk": "desc",
+    "Schultyp_Allg_wdk_nDistinct": "desc",
+    "Schultyp_wdk_nDistinct": "desc",
+    "Forschungskorpus_WdK": "desc",
+    "Schulformen_opac" : "desc"
+})
 
 ##lists all metadata that is to be displayed for each result
 #set($metadata_book = [

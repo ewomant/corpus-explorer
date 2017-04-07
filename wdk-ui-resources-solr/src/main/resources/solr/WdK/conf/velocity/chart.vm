@@ -19,7 +19,7 @@
 ##- include timefield
 ##
 
-
+#set($groupfield_stats_param = "&stats.field={!tag%3Dp+countDistinct=true}$groupfield")
 #set($withoutparams = ['q','s','rows', 'hl.q', 'group.field', 'group', 'group.ngroup', 'group.facet', 'facet.field', 'textfs', 'group.field'])
 
 #set($success = $withoutparams.addAll($termfacets))
@@ -74,7 +74,8 @@ var chart_conf = {
     top_groups_no: 10,
     norelativevalues: false,
     no_timefield_url: $esc.s#lens_No_CurrentFQ($timefacet)$esc.s,
-
+    group_stats_field : "$groupfield",
+    group_stats_field_title : $esc.s#displayfacetname($groupfield)$esc.s,
 	statsonquery : false,
 
     info_currentselection: $esc.s$currentSelection.replaceAll(",", "")$esc.s,

@@ -31,7 +31,11 @@ var overallmean_topics_totals = {};
 var slg = { ABS : "_abs",
             COUNT_REL: "_count",
             STATS: "_topic",
-            TOPIC_MEAN: "_tm"};
+            TOPIC_MEAN: "_tm",
+            COUNT_DISTINCT: "_cd"};
+
+var lastSQId = 'lastStatsQueries';
+
 
 var mv = "-"; //sign for missingvalues
 
@@ -140,9 +144,13 @@ if (!Array.prototype.find) {
 
 
 
+
+
         if((open  == 'open' || (open !== 'closed' &&  $('#chartcontrols').hasClass('open')))){
             if(typeof(solrjson_pivot_query) !== undefined){
+
                 loadChart();
+
                 initialize_settings();
             }
         }
@@ -236,6 +244,9 @@ function loadChart(){
 	if(typeof cs.currentselection_url === 'undefined' || cs.currentselection_url == ""){console.error("Error: cs.currentselection_url undefined"); return;}
 	if(typeof current_query_url === 'undefined' || current_query_url == ""){console.error("Error: current_query_url undefined"); return;}
 
+    saveStatsQuery(cs.currentselection_url, cs.info_currentselection);
+
+
 	//get totals for facet without other queryparameters applied
 	console.log('get totals from: ' + cs.baseurl);
 
@@ -272,6 +283,8 @@ function loadChart(){
 
             console.log('loading data from: ' + cs.currentselection_url);
 
+            console.time("loadChart();");
+
 			jQuery.ajax({
 				url:  cs.currentselection_url,
 				dataType: 'json',//jsonp for online query
@@ -292,24 +305,31 @@ function loadChart(){
 
 					if(typeof(main_jd) !== 'undefined' && main_jd !== false && main_jd.length > 0){
 
-							console.log('data current parsed, ' + main_jd.length + " datapoints");
+                        console.log('data current parsed, ' + main_jd.length + " datapoints");
 
-                            currentExtent =  d3.extent(main_jd, function(e){return e.fieldvalue});
-							main_jd = fillYears(main_jd);
+                        currentExtent =  d3.extent(main_jd, function(e){return e.fieldvalue});
 
-
-				    		x_time_values = year_values(main_jd[0]['fieldvalue'], main_jd[main_jd.length-1]['fieldvalue']);
-
-                            main_jd_smooth = smoothData(main_jd);
+                        main_jd = fillYears(main_jd);
 
 
-							if( cs.groupfield &&  cs.groupfield !== ""){
-								secondlevel_jd = parsePivotData(data, cs.groupfield, false, cs.statsfield);
-							}
-                         overallmean_topics = parseStatsFields(data, cs.statsfield) ;
+                        x_time_values = year_values(main_jd[0]['fieldvalue'], main_jd[main_jd.length-1]['fieldvalue']);
 
-							drawChart();
+                        main_jd_smooth = smoothData(main_jd);
 
+
+                        if( cs.groupfield &&  cs.groupfield !== ""){
+                            secondlevel_jd = parsePivotData(data, cs.groupfield, false, cs.statsfield);
+                        }
+                        overallmean_topics = parseStatsFields(data, cs.statsfield) ;
+
+                        //var document_counts = parseStatsFields(data, [cs.group_stats_field], slg.COUNT_DISTINCT, "countDistinct") ;
+
+                        //console.log("document_counts");
+                        //console.log(document_counts);
+
+                        drawChart();
+
+                        console.timeEnd("loadChart();");
 
 					}else{
 						console.error('no data parsed from');
@@ -331,7 +351,6 @@ function parseStatsFields(data, statsfields){
     });
     return stats;
 }
-
 function parsePivotData(data, pivot1, pivot2, statsfield){
 
     var jd = [];
@@ -726,8 +745,8 @@ c3chartsettings = {
 
 //smooth ueber jd_smooth
 
-	console.log("c3chartsettings:");
-	console.log(c3chartsettings);
+	//console.log("c3chartsettings:");
+	//console.log(c3chartsettings);
 	chart = c3.generate( c3chartsettings );
 
 
@@ -762,6 +781,7 @@ function createTabularLegend(chart, keys, fieldTitles) {
     legendContainer.select("#" + id_legend +" ." + class_legendControls).remove();
     legendContainer.select("#" + id_legendHeading).remove();
     legendContainer.select(".groups_uncalled").remove();
+    legendContainer.select(".extensionLink").remove();
 
 
 
@@ -854,16 +874,15 @@ function createTabularLegend(chart, keys, fieldTitles) {
     });
 
 
-        if( totalsExtent[0] < currentExtent[0]  ||  totalsExtent[1] > currentExtent[1]  ){
-            console.log("Korpuszeitraum > Anfragezeitraum:")
-            legendContainer.insert("a", '.'+legendTable)
-                .html("Korpuszeitraum ist gr&ouml;&szlig;er Anfragezeitraum: Anfrage filtern auf Anfragezeitraum "
+        if(totalsExtent[0] < currentExtent[0]  ||  totalsExtent[1] > currentExtent[1]  ){
+            //console.log("Korpuszeitraum > Anfragezeitraum:")
+            legendContainer.insert("a", '#groupselector_box')
+                .html("Der Korpuszeitraum ist gr&ouml;&szlig;er als der Anfragezeitraum: Wollen Sie die Anfrage filtern auf den Anfragezeitraum "
                     +currentExtent[0] + " bis " + currentExtent[1] + "?" )
-                .attr('href', chart_conf.no_timefield_url+"&fq=" + chart_conf.timefield + ":["
+                .attr('href', cs.no_timefield_url+"&fq=" + cs.timefield + ":["
                         +currentExtent[0]+"+TO+"+currentExtent[1]+"]")
                 .attr('class', 'extensionLink');
         }
-        //no_timefield_url
 
 
 
@@ -1535,9 +1554,9 @@ function convertChartToCsv() {
         csvArray.push(line.join(","));
     });
     //Add info about selection
-    csvArray.push("\nAktuelle Auswahl," + chart_conf.info_currentselection);
-    csvArray.push("Aktuelle Auswahl URL," +chart_conf.info_currentselection_url);
-    csvArray.push("Indexversion," +chart_conf.info_core_version);
+    csvArray.push("\nAktuelle Auswahl," + cs.info_currentselection);
+    csvArray.push("Aktuelle Auswahl URL," +cs.info_currentselection_url);
+    csvArray.push("Indexversion," +cs.info_core_version);
     //d3.select("#chartbox").append("textarea").text(csvArray.join("\n")).attr("style", "width:100%;min-height:20em;");
     return csvArray.join("\n");
 }
@@ -1547,3 +1566,18 @@ function extension(array){
     var lastyear = array[array.length-1]['fieldvalue'];
     return [firstyear, lastyear];
 }
+
+
+function  saveStatsQuery(url, desc){
+    //stringsonly, confer https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API
+    var desc = "_desc";
+    localStorage[lastSQId] = url;
+    localStorage[lastSQId+desc] = desc;
+    console.log("localStorage[lastSQId]");
+    console.log(localStorage[lastSQId]);
+
+    //save last 10 queries with descption in rolling order
+    //when query selected for compariosn save in different variable in
+    // localstorage as well, always get
+}
+
