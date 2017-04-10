@@ -50,7 +50,7 @@ em{
 	font-size:0.8em;
 }
 
-#customyear input[type=number]{
+.customyear input[type=number]{
 	width:5em;
 }
 
@@ -240,15 +240,16 @@ h1 em{
 }
 
 body .constraints a.restart{
-    background-color: #777;
-    color:white;
+    color: #333;
     font-size: 80%;
-    padding:2px;
-    border-radius: 2px;
+    padding: 2px 2px 2px 15px;
+    border-radius: 1px;
     margin: 3px;
-    display:block;
-    float:right;
+    display: block;
+    float: right;
     text-align: center;
+    font-weight: bold;
+    background: #fff no-repeat left 0px center url(../admin/file?file=/velocity/img/delete_icon.png&contentType=img/png);
 }
 
 #query-form{
@@ -277,7 +278,7 @@ margin-left:1em;
 
 .query-box #q {
 
-  width: 85%;
+  width: 75%;
   height: 30px;
   border: 1px solid #999;
   font-size: 1em;

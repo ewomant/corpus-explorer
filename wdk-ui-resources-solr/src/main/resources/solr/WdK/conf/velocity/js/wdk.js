@@ -12,27 +12,6 @@ $(window).bind("pageshow", function() {
 
 $(document).ready(function() {
 
-
-
-
-
-    $(document).tooltip({
-        show: {
-            effect: "fadeToggle", duration: 800},
-            position: { my: "left+15 top", at: "left bottom" },
-            content: function () {
-            var element = $(this);
-
-            if (element.is("[title]")) {
-                return element.attr("title");
-            }
-            if (element.is("img")) {
-                return element.attr("alt");
-            }
-        }
-
-    });
-
     //create function, which hides all but those saved in session
     //element uebergeben?
     $("h2.facet-field, .collapse-button").each(function () {
@@ -51,6 +30,28 @@ $(document).ready(function() {
         }
     });
 
+
+
+
+
+
+
+    $(document).tooltip({
+        show: {
+            effect: "fadeToggle", duration: 400},
+        position: { my: "left+15 top", at: "left bottom" },
+        content: function () {
+            var element = $(this);
+
+            if (element.is("[title]")) {
+                return element.attr("title");
+            }
+            if (element.is("img")) {
+                return element.attr("alt");
+            }
+        }
+
+    });
 
     $("h2.facet-field").click(function () {
         //console.log('slide open/close');

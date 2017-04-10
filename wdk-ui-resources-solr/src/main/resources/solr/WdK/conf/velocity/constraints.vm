@@ -11,7 +11,7 @@
 
         #if($currentQuery.size() > 0 &&  $currentQuery[0] != '')
             <a style="{text-decoration: line-through;}"
-               href="#lensNoQ">Anfrage:$currentQuery[0]</a>&nbsp;
+               href="#lensNoQ">Anfrage&nbsp;(#qop_desc()):&nbsp;$currentQuery[0]</a>
         #end
 
             #foreach($field in $sort.sort($selected_filter_queries.keySet()))

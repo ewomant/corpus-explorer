@@ -37,8 +37,8 @@
 
 ##Facet groups are solely used for display. They are identified based on the start of the query-string.
 #set($facet_query_groups = {"text:": "OntoQuery",
-                            "-Afz_wdk:": "Auflage",
-                            "Afz_wdk:": "Auflage"
+                            "-Afz_wdk:": "Afz_wdk",
+                            "Afz_wdk:": "Afz_wdk"
 })
 
 
@@ -62,7 +62,6 @@
  					"goobi_Author.displayName",
  					"goobi_Editor.displayName",
  					"page",
- 					"Afz_wdk",
                     "text",
                     "divType",
                     'Schulbuchtyp_wdk',
@@ -72,7 +71,12 @@
                     "Forschungskorpus_WdK",
                     "Schulformen_opac",
                     "Schultyp_Allg_wdk",
-                    "Schultyp__wdk"
+                    "Ort_erste_angabe_wdk",
+                    "Bildungsstufe_opac",
+                    "Regionen_opac",
+                    "Geschlecht_wdk",
+                    "Konfession_wdk",
+                    "Schultyp_wdk"
 ])
 
 #set($facetnames = ["Erscheinungsjahr",
@@ -82,59 +86,61 @@
 					"Werk",
 					"Erscheinungsort",
 					"Titel",
-					"Verlag (ges&auml;ubert wdk)",
+					"Verlag ges&auml;ubert (WdK)",
 					"Extrahierte Personennamen",
 					"Extrahierte Ortsnamen",
 					"Extrahierte Organisationen",
 					"Weitere extrahierte Benennungen",
 					"Extrahierte Jahreszahlen",
-					"Auflagennummer",
+					"Auflagennummer (WdK)",
 					"Inhalt Raum/Thema",
                     "Inhalt: Zeit",
 					"Autor",
 					"Hrsg.",
 					"Seite",
-					"Auflage",
                     "Volltext",
-                    "Strukturtyp",
-                    'Schulbuchtyp_wdk',
-                    "Jahr der Erstauflage_wdk",
-                    "Schultyp_Allg_wdk Anzahl Werte",
-                    "Schultyp_wdk Anzahl Werte",
-                    "Forschungskorpus_WdK",
-                    "Schulform_opac",
-                    "Schultyp_Allg_wdk",
-            "Schultyp__wdk"])
+                    "Strukturtypen",
+                    'Schulbuchtyp (WdK)',
+                    "Jahr der Erstauflage (WdK)",
+                    "Schultypen (Allgemein WdK) Anzahl Werte",
+                    "Schultypen (WdK) Anzahl Werte",
+                    "Forschungskorpus (WdK)",
+                    "Schulformen (OPAC)",
+                    "Schultypen Allgemein (WdK)",
+                    "Erscheinungsort erste Angabe (WdK)",
+                    "Bildungsstufen (OPAC)",
+                    "Regionen (OPAC)",
+                    "Geschlecht (WdK)",
+                    "Konfession (WdK)",
+                    "Schultypen (WdK)"])
+
 
 #set($facet_descriptions ={
-    "goobi_PublicationYear" : "desc",
-    "goobi_singleDigCollection": "desc",
-    "goobi_PublisherName": "desc",
-    "goobi_TitleDocMainShort": "desc",
-    "document": "desc",
-    "goobi_PlaceOfPublication": "desc",
-    "goobi_TitleDocMainShort_Compl": "desc",
-    "Verlag_wdk": "desc",
+    "goobi_PublicationYear" : "Jahr der Erscheinung nach OPAC Standard",
+    "goobi_singleDigCollection": "Sammlungskategorie basierend auf gei-digital.de",
+    "goobi_PublisherName": "Verlage nach OPAC Standard",
+    "goobi_PlaceOfPublication": "Verlagsorte nach OPAC Standard",
+    "Verlag_wdk": "WdK-Projekt: zusammengefasste und vereinheitlichte Verlage",
     "namedentities_per": "desc",
     "namedentities_loc": "desc",
     "namedentities_org": "desc",
     "namedentities_misc": "desc",
-    "years": "desc",
-    "Afz_wdk": "desc",
-    "Inhalt_Raum_Thema_wdk": "desc",
-    "Inhalt_Zeit_wdk": "desc",
-    "goobi_Author.displayName": "desc",
-    "goobi_Editor.displayName": "desc",
-    "page": "desc",
-    "Afz_wdk": "desc",
-    "text": "desc",
+    "Afz_wdk": "WdK-Projekt: zusammengefasste und vereinheitlichte Nummer der Auflage/Marker f&uuml;r Verbreitungsgrad",
+    "Inhalt_Raum_Thema_wdk": "WdK-Projekt: zusammengefasste und vereinheitlichte, thematisch-r&auml;umliche Inhaltskategorien",
+    "Inhalt_Zeit_wdk": "WdK-Projekt: zusammengefasste und vereinheitlichte, zeitliche Inhaltskategorien",
     "divType": "desc",
-    'Schulbuchtyp_wdk': "desc",
-    "Jahr_Erstauflage_wdk": "desc",
-    "Schultyp_Allg_wdk_nDistinct": "desc",
-    "Schultyp_wdk_nDistinct": "desc",
-    "Forschungskorpus_WdK": "desc",
-    "Schulformen_opac" : "desc"
+    'Schulbuchtyp_wdk': "WdK-Projekt: vereinheitlichte Buchtypen f&uuml;r verschiedene Nutzergruppen und Anwendungsbereiche",
+    "Jahr_Erstauflage_wdk": "WdK-Projekt: Jahr der Erscheinung der 1. Auflage/Marker f&uuml;r Verbreitungsgrad",
+    "Schultyp_Allg_wdk": "WdK-Projekt: vereinfachte und zusammengefasste Gruppierung des historisch kontextualiserten Schultyps in der Buch genutzt wurde",
+    "Schultyp_wdk": "WdK-Projekt: historisch kontextualiserter Schultyp in der Buch genutzt wurde",
+    "Forschungskorpus_WdK": "WdK-Projekt: Unterkorpus Relevanz Hzgt. Braunschweig",
+    "Schulformen_opac" : "Schultyp in der Buch genutzt wurde - OPAC Standard",
+    "Bildungsstufe_opac": "Bildungsstufe in der Buch genutzt wurde - OPAC Standard",
+    "Ort_erste_angabe_wdk": "desc",
+    "Regionen_opac": "desc",
+    "Geschlecht_wdk": "desc",
+    "Konfession_wdk": "desc"
+
 })
 
 ##lists all metadata that is to be displayed for each result
@@ -190,7 +196,7 @@
 #*
  1877 - Leipzig : Teubner
 
-Autor: Lübker, Friedrich
+Autor: L&uuml;bker, Friedrich
 Hrsg.: Erler, Max
 Sammlungen: Kaiserreich Geschichtsschulbuecher
 Schultyp_wdk: Gymnasium

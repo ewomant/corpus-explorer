@@ -40,9 +40,7 @@
 
 #set($selected_filter_queries = {})
 #set($selected_topicfilters = {})
-
-##alternative: save object with attributes: is_range_filter, is_topic_range_filter, is_topic_filter
-
+##alternative: save object with attributes: is_range_filter, is_topic_range_filter, is_topic_filte
 
 #if($params.getParams('fq'))
 ##parse different fields in one fq, add values to correct field
@@ -81,7 +79,7 @@
 
                 #set($value = $fq_string)
                 #set($field_id = $fq_string.trim())
-                #set($filter_name = $esc.html($facet_query_names[$fq_string]))
+                #set($filter_name = $facet_query_names[$fq_string])
 
 
                 #addFieldSelection($field_id, $field,$filter_name, $fq_string, $type, $value)
@@ -94,7 +92,8 @@
                 #set($field_id = $field.trim())
 
                 #set($filter_name = "#displayfacetname($field)")
-                #set($filter_name = "<i>$filter_name.trim()</i> : " + ($esc.html($value)))
+
+                #set($filter_name = "$filter_name.trim() : ${esc.html($value.replaceAll('TO', 'bis').replace('[', '').replace(']',''))}")
 
                 #addFieldSelection($field_id, $field,$filter_name, $fq_string, $type, $value)
 
@@ -145,7 +144,7 @@
 
 
                     #set($filter_name = "#displayfacetname($field)")
-                    #set($filter_name = "<i>$filter_name.trim()</i> : #{join_strings}($value, ' ODER ')")
+                    #set($filter_name = "$filter_name.trim() : #{join_strings}($value, ' ODER ')")
 
 
                     #set($field_id = $field)
@@ -165,6 +164,8 @@
 
 
 #end
+
+#set($qop = $!request.params.get('q.op'))
 
 #macro(addFieldSelection $field_id, $field,$filter_name, $fq_string, $type, $value)
     #set($filter = {'field': $field,

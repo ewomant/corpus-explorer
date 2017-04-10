@@ -40,7 +40,7 @@
         #set($field_active = true)
     #end
 
-<h2  id="facetbox_${fieldName}" class="facet-field#if($field_active) facet-field_active#end"> #displayfacetname($display)</h2>
+<h2  id="facetbox_${fieldName}" title="$!facet_descriptions[${fieldName}]" class="facet-field#if($field_active) facet-field_active#end" > #displayfacetname($display)</h2>
 
     #set($fromto = ["-1","$start","$end"])
 
@@ -57,11 +57,11 @@
 
 <ul class="collapsible">
 
-    <li><form class="customyear pure-form" action="#url_for_filters_no_current($timefacet)" method="get">
+    <li><form class="customyear pure-form" action="#url_for_filters_no_current(${fieldName})" method="get">
         <input type="number" size="4" value="$!fromto[1].trim()" min="1700" max="1930" class="RangeYearFrom" name="RangeYearFrom"> :
         <input type="number" size="4" value="$!fromto[2].trim()" min="1700" max="1930" class="RangeYearTo" name="RangeYearTo">
-        <input type="hidden" class="RangeYearUrl" value="#url_for_filters_no_current($timefacet)"/>
-        <input type="hidden" class="timefield" value="$timefacet"/>
+        <input type="hidden" class="RangeYearUrl" value="#url_for_filters_no_current(${fieldName})"/>
+        <input type="hidden" class="timefield" value="${fieldName}"/>
         <input type="submit" class="sortSubmit pure-button" value="OK"/>
 
     </form></li>

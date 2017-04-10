@@ -33,7 +33,7 @@
     ## Hide facets without value
     #if($field.values.size() > 0)
 
-	  <h2  id="facetbox_${field.name}"  class="facet-field#if($field_active) facet-field_active#end">#displayfacetname($field.name)
+	  <h2  id="facetbox_${field.name}"  class="facet-field#if($field_active) facet-field_active#end" title="$!facet_descriptions[${field.name}]">#displayfacetname($field.name)
           </h2>
 
             <ul class="collapsible facet-field">

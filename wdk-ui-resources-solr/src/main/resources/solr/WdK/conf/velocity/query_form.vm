@@ -11,6 +11,10 @@
 
 
         <input type="text" id="q" name="q" value="$!esc.html($params.get('q'))"/>
+        <select  id="qop" name="q.op">
+            <option value="AND" #if($qop  == 'AND') selected #end>Alle Terme</option>
+            <option value="OR" #if($qop  == 'OR') selected #end>min. 1 Term</option>
+            </select>
         <input type="submit" id="querySubmit" class="pure-button" value="Suchen"/>
 
 

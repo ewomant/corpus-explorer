@@ -34,7 +34,8 @@ var slg = { ABS : "_abs",
             TOPIC_MEAN: "_tm",
             COUNT_DISTINCT: "_cd"};
 
-var lastSQId = 'lastStatsQueries';
+var lastSQId = 'localLastStatsQueries';
+
 
 
 var mv = "-"; //sign for missingvalues
@@ -136,6 +137,8 @@ if (!Array.prototype.find) {
         console.log("\n\nchartconf:");
         console.log(chart_conf);
         cs = chart_conf;
+
+        saveStatsQuery(cs.currentselection_url, cs.info_currentselection);
 
         var open = localStorage['chartcontrols'];
 
@@ -244,7 +247,7 @@ function loadChart(){
 	if(typeof cs.currentselection_url === 'undefined' || cs.currentselection_url == ""){console.error("Error: cs.currentselection_url undefined"); return;}
 	if(typeof current_query_url === 'undefined' || current_query_url == ""){console.error("Error: current_query_url undefined"); return;}
 
-    saveStatsQuery(cs.currentselection_url, cs.info_currentselection);
+
 
 
 	//get totals for facet without other queryparameters applied
@@ -673,6 +676,9 @@ c3chartsettings = {
 	    	    ratio: ( main_jd.length >= 100) ? 0.06 : 0.125 //ratio has to be set dpending on number of tickvalues - bug in c3.js-libary?
 	    	  }
 	    	},
+        line: {
+            connectNull: true
+        },
 	    axis: {
               x: {
                   show: true,
@@ -694,6 +700,7 @@ c3chartsettings = {
                             bottom: 0
                         }
                 },
+
 
             //rechte-Achse: hintergrund -absolute oder relative werte für gesamttreffer, absolute werte fuer grupperey:
              y2: {
@@ -784,7 +791,7 @@ function createTabularLegend(chart, keys, fieldTitles) {
     legendContainer.select(".extensionLink").remove();
 
 
-
+    retrieveStatsQueries();
 
     var legendLengthDefault = 6;
 
@@ -1570,14 +1577,29 @@ function extension(array){
 
 function  saveStatsQuery(url, desc){
     //stringsonly, confer https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API
-    var desc = "_desc";
-    localStorage[lastSQId] = url;
-    localStorage[lastSQId+desc] = desc;
-    console.log("localStorage[lastSQId]");
-    console.log(localStorage[lastSQId]);
+    var newEntry = {'url': url, 'desc': desc };
 
-    //save last 10 queries with descption in rolling order
-    //when query selected for compariosn save in different variable in
-    // localstorage as well, always get
+    if(localStorage[lastSQId]){
+       var lastStatsQueries = JSON.parse(localStorage[lastSQId]);
+        /*remove url if present*/
+        lastStatsQueries = jQuery.grep(lastStatsQueries, function(e, i){return e.url !== url;});
+         /*(re-)add as first parameter*/
+        lastStatsQueries.unshift(newEntry);
+    }else{
+       var lastStatsQueries = [newEntry];
+
+    }
+    //
+    localStorage[lastSQId] = JSON.stringify(lastStatsQueries.slice(0,9));
+}
+
+function  retrieveStatsQueries(){
+    if(localStorage[lastSQId]){
+        var lastStatsQueries = JSON.parse(localStorage[lastSQId]);
+    }else{
+        var lastStatsQueries = [];
+    }
+    console.log(lastStatsQueries);
+    return lastStatsQueries;
 }
 

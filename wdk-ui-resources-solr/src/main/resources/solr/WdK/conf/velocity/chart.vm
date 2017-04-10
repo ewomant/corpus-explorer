@@ -23,7 +23,7 @@
 #set($withoutparams = ['q','s','rows', 'hl.q', 'group.field', 'group', 'group.ngroup', 'group.facet', 'facet.field', 'textfs', 'group.field'])
 
 #set($success = $withoutparams.addAll($termfacets))
-#set($lensforstats="#lens_without_P($withoutparams)&q=${queryterms}&rows=0")
+#set($lensforstats="#lens_without_P($withoutparams)&q=${queryterms}#qop()&rows=0")
 
 
 ##exclude junkf-filter from corpus-base-query

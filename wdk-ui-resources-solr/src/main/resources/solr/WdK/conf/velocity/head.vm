@@ -48,7 +48,4 @@
 
 ##<script type="text/javascript" src="#{url_for_solr}/admin/file?file=/velocity/js/d3.layout.cloud.js&contentType=text/javascript"></script>
 
-<script type="text/javascript">
-    timefacetfield = "${timefacet}";
-</script>
 
