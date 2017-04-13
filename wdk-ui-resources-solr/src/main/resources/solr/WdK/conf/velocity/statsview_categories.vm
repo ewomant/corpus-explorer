@@ -549,7 +549,7 @@
  </table>
 #set($currentSelection = "#displaycurrentselection()")
 #addLineToCSV("${esc.newline}Aktuelle Auswahl,$currentSelection.replaceAll(',', '')")
-#addLineToCSV("Aktuelle Auswahl URL,#url_for_solr()/browse#lens()")
+#addLineToCSV("URL,#url_for_solr()/browse#lens()")
 #addLineToCSV("Indexversion,$core_version")
 
     <form method="post" target="_blank" action="$data_loopback_url">

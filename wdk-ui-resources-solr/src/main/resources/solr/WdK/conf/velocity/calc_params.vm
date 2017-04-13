@@ -38,13 +38,31 @@
 	#set( $curr_sort_dir = "asc")
 #end
 
-#set($selected_filter_queries = {})
-#set($selected_topicfilters = {})
+
+
+
 ##alternative: save object with attributes: is_range_filter, is_topic_range_filter, is_topic_filte
 
-#if($params.getParams('fq'))
+#macro(addFieldSelection $field_id, $field,$filter_name, $fq_string, $type, $value, $pfq)
+    #set($filter = {'field': $field,
+        'field_name': $filter_name,
+        'fq': $fq_string,
+        'type': $type,
+        'value': $value})
+
+
+    #if(! $pfq[$field_id])
+        #set($pfq[$field_id] = $filter)
+
+    #end
+#end
+
+#macro(calc_selected $fqs $parsed_filter_queries )
+
+
+#if($fqs)
 ##parse different fields in one fq, add values to correct field
-    #foreach($fq_string in $params.getParams('fq'))
+    #foreach($fq_string in $fqs)
         #set($previous_fq_count=$velocityCount - 1)
         #set($filter_name = "")
         #set($field = "")
@@ -82,7 +100,7 @@
                 #set($filter_name = $facet_query_names[$fq_string])
 
 
-                #addFieldSelection($field_id, $field,$filter_name, $fq_string, $type, $value)
+                #addFieldSelection($field_id, $field,$filter_name, $fq_string, $type, $value, $parsed_filter_queries)
 
             ##range facets
             #elseif(($value.startsWith("[") || $value.startsWith("{")) && ($value.endsWith("]") || $value.endsWith("}") )&& $value.contains("TO") && ! $value.contains($missing_value_range) )
@@ -95,7 +113,7 @@
 
                 #set($filter_name = "$filter_name.trim() : ${esc.html($value.replaceAll('TO', 'bis').replace('[', '').replace(']',''))}")
 
-                #addFieldSelection($field_id, $field,$filter_name, $fq_string, $type, $value)
+                #addFieldSelection($field_id, $field,$filter_name, $fq_string, $type, $value, $parsed_filter_queries)
 
 
             ##facet fields - always assume multivalued
@@ -150,7 +168,7 @@
                     #set($field_id = $field)
 
                     ##todo: add vor each field-value, check in addFieldSelection if field exists and in this case only add value to existing - when to create filtername?
-                    #addFieldSelection($field_id, $field,$filter_name, $fq_string, $type, $value)
+                    #addFieldSelection($field_id, $field,$filter_name, $fq_string, $type, $value, $parsed_filter_queries)
 
             #end
 
@@ -165,19 +183,14 @@
 
 #end
 
+#end
+
+
+#set($selected_filter_queries = {})
+#calc_selected($params.getParams('fq'), $selected_filter_queries)
+
+
 #set($qop = $!request.params.get('q.op'))
 
-#macro(addFieldSelection $field_id, $field,$filter_name, $fq_string, $type, $value)
-    #set($filter = {'field': $field,
-        'field_name': $filter_name,
-        'fq': $fq_string,
-        'type': $type,
-        'value': $value})
 
-
-    #if(! $selected_filter_queries[$field_id])
-        #set($selected_filter_queries[$field_id] = $filter)
-
-    #end
-#end
 

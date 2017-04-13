@@ -99,7 +99,7 @@
 					"Hrsg.",
 					"Seite",
                     "Volltext",
-                    "Strukturtypen",
+                    "Strukturtyp",
                     'Schulbuchtyp (WdK)',
                     "Jahr der Erstauflage (WdK)",
                     "Schultypen (Allgemein WdK) Anzahl Werte",
@@ -121,25 +121,25 @@
     "goobi_PublisherName": "Verlage nach OPAC Standard",
     "goobi_PlaceOfPublication": "Verlagsorte nach OPAC Standard",
     "Verlag_wdk": "WdK-Projekt: zusammengefasste und vereinheitlichte Verlage",
-    "namedentities_per": "desc",
-    "namedentities_loc": "desc",
-    "namedentities_org": "desc",
-    "namedentities_misc": "desc",
+    "namedentities_per": "Automatisch auf Seitenebene extrahierte Personennamen",
+    "namedentities_loc": "Automatisch auf Seitenebene extrahierte Ortsnamen",
+    "namedentities_org": "Automatisch auf Seitenebene extrahierte Namen von Organisationseinheiten",
+    "namedentities_misc": "Automatisch auf Seitenebene extrahierte Namen (andere)",
     "Afz_wdk": "WdK-Projekt: zusammengefasste und vereinheitlichte Nummer der Auflage/Marker f&uuml;r Verbreitungsgrad",
     "Inhalt_Raum_Thema_wdk": "WdK-Projekt: zusammengefasste und vereinheitlichte, thematisch-r&auml;umliche Inhaltskategorien",
     "Inhalt_Zeit_wdk": "WdK-Projekt: zusammengefasste und vereinheitlichte, zeitliche Inhaltskategorien",
-    "divType": "desc",
+    "divType": "Strukturtyp (Monographie, Bild, etc.)",
     'Schulbuchtyp_wdk': "WdK-Projekt: vereinheitlichte Buchtypen f&uuml;r verschiedene Nutzergruppen und Anwendungsbereiche",
     "Jahr_Erstauflage_wdk": "WdK-Projekt: Jahr der Erscheinung der 1. Auflage/Marker f&uuml;r Verbreitungsgrad",
     "Schultyp_Allg_wdk": "WdK-Projekt: vereinfachte und zusammengefasste Gruppierung des historisch kontextualiserten Schultyps in der Buch genutzt wurde",
     "Schultyp_wdk": "WdK-Projekt: historisch kontextualiserter Schultyp in der Buch genutzt wurde",
-    "Forschungskorpus_WdK": "WdK-Projekt: Unterkorpus Relevanz Hzgt. Braunschweig",
+    "Forschungskorpus_WdK": "WdK-Projekt: Forschungsrelevante Unterkorpora, z.B. mit Relevanz für das Hzgt. Braunschweig",
     "Schulformen_opac" : "Schultyp in der Buch genutzt wurde - OPAC Standard",
     "Bildungsstufe_opac": "Bildungsstufe in der Buch genutzt wurde - OPAC Standard",
-    "Ort_erste_angabe_wdk": "desc",
-    "Regionen_opac": "desc",
-    "Geschlecht_wdk": "desc",
-    "Konfession_wdk": "desc"
+    "Ort_erste_angabe_wdk": "WdK-Projekt: erstgenannter Ort der Veröffentlichung bei Mehrfachnennung",
+    "Regionen_opac": "WdK-Projekt: Regionen in denen die Bücher zum Einsatz kommen konnte/sollte",
+    "Geschlecht_wdk": "WdK-Projekt: Angabe von geschlechtsspezifischem Einsatz der Bücher sofern vorhanden",
+    "Konfession_wdk": "WdK-Projekt: Angabe von religionsspezifischem Einsatz der Bücher sofern vorhanden"
 
 })
 
@@ -232,6 +232,11 @@ Schulformen_opac: Gymnasium
     "namedentities_loc"
 ])
 
+##parameters that are mirrored to define base_query in chart
+#set($params_for_base_constraints_mapping = {'q' : 'base_q', 'q.op' : 'base_qop','fq' : 'base_fq'})
+#set($params_for_base_constraints = [])
+
+
 ##configuration of grouping option used for the statsview
 #set($timefacet_grouped = "${timefacet}_Jahrzehnte")
 #set($success = $facetkeynames.add($timefacet_grouped))
@@ -239,6 +244,12 @@ Schulformen_opac: Gymnasium
 
 ##these paramters are ususally added to all links and forms thoughout a sessionn if not overriden
 #set($additional_params = ["fl", "sf", "ct", "show_topic", "hl.q", "rows", "group", 'group.field', 'group.ngroups', 'group.facet', 'statsonquery', 'topicmodel', 'group_stats_field',"top_groups_no", "textfs"])
+
+#foreach($p in $params_for_base_constraints_mapping.keySet())
+    #set($success = $additional_params.add($params_for_base_constraints_mapping[$p]))
+    #set($success = $params_for_base_constraints.add($params_for_base_constraints_mapping[$p]))
+
+#end
 
 ##these are the paramters that are kept in the  stats_view_catgories template
 #set($additional_params_stats = ["v.template",
@@ -280,8 +291,7 @@ Schulformen_opac: Gymnasium
 <a class="linkToSource" target="_blank" href="${link_toc}${identifier}/${pagenumber}/-/">Werk auf $link_targetname</a>
 #end
 
-##these are the params that are removed when creating the query-urls for the chart
-#set($statswithoutparams = ["rows", "hl.q", "facet.pivot", 'group','queryOpts','group.field','group.ngroups', 'group.facet' , 'facet.field', 'textfs'])
+
 
 
 ##field value used internally as the value for an empty field-value

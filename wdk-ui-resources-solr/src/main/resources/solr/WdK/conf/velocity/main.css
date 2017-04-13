@@ -243,12 +243,13 @@ body .constraints a.restart{
     color: #333;
     font-size: 80%;
     padding: 2px 2px 2px 15px;
-    border-radius: 1px;
+    border-radius: 2px;
     margin: 3px;
     display: block;
     float: right;
     text-align: center;
     font-weight: bold;
+    border: 1px solid #333;
     background: #fff no-repeat left 0px center url(../admin/file?file=/velocity/img/delete_icon.png&contentType=img/png);
 }
 
@@ -268,10 +269,14 @@ margin-left:1em;
     outline: none; !important
 }
 
-
-.query-box, .constraints {
-  padding: 0px 0px 0px 0px;
-  margin: 1em 0px 0px 0px;
+.constraints{
+    padding: 0 0 0 0;
+    margin: 1.5em 0 0 0;
+    font-weight: normal;
+}
+.query-box{
+  padding: 0 0 0 0;
+  margin: 0.7em 0 0 0;
   font-weight: normal;
 
 }
@@ -677,7 +682,7 @@ ul.sortfields li a, ul.sortfields li span{
 	color: #333333;
 	text-decoration: none;
 	font-size:90%;
-		font-weight:bold;
+
 }
 
 ul.sortfields li.sortselected a, ul.sortfields li.sortselected span{
@@ -1267,7 +1272,7 @@ background: #344E6A no-repeat left 2px center url(../admin/file?file=/velocity/i
 	font-size:100%;
 	font-weight: bold;
 	margin-top:0px;
-	padding-top:0px;
+	padding-top:3px;
 	margin-bottom:0em;
 	vertical-align: bottom;
 }
@@ -1283,7 +1288,7 @@ background-image: url(../admin/file?file=/velocity/img/right-arrow-white.png&con
 
 #chart{
     margin: 0 0 1em;
-
+    font-size:90%;
 	border: 1px solid #D8DCDF;
 	}
 #chartcontainer{
@@ -1293,10 +1298,14 @@ background-image: url(../admin/file?file=/velocity/img/right-arrow-white.png&con
 }
 #chartresizable{
     margin: 1em 0;
+    padding-bottom:1.5em;
 }
 .ui-resizable-s {
     border-bottom: 3px groove #CCC;
     opacity: 0.3;
+    bottom: -5px;
+    height: 15px;
+    background: #EEE;
 }
 #chartsettings{
 	display: table;
@@ -1344,25 +1353,40 @@ background-image: url(../admin/file?file=/velocity/img/right-arrow-white.png&con
 
 #chartlegendcontainer{
 width:100%;
-display: table;
 vertical-align: top;
-margin-bottom:1px;
-    text-align:left;
-    font-size:90%;
-    min-height: 7em;
+margin-bottom:4px;
+text-align:left;
+
+    padding-left: 5px;
+}
+
+#chartlegendcontainer .chartTitleContainer{
+    text-align: left;
+    margin:5px;
+    position:relative;
+}
+
+.charttitle{
+    margin-right: 15em;
+}
+
+
+#chartlegendcontainer .topic_button{
+
+    text-align:right;
 
 }
 
-.topicbox {
-display: table-cell;
-width: 33%;
-max-width: 30em;
-text-align:right;
-padding-bottom: 1em;
+
+#chart .topicbox {
+    min-height: 60px;
+
 }
 .topicbox p{
     margin:0 0 0.5em 0;
 }
+
+
 
 .topicwords{
     text-align: left;
@@ -1371,46 +1395,61 @@ padding-bottom: 1em;
     display:inline-block;
     padding:1px;
 }
+
 #chartlegendresizable {
-width: 66%;
-    min-width: 30em;
-display: table-cell;
-min-height: 7em;
 
 }
 
-@media  only screen and (max-width: 40em){
-    .topicbox {
-        display: block;!important;
-        width: 100%;!important;
-
-    }
-    #chartlegendresizable {
-        width: 100%;!important;
-        display: block;!important;
-    }
-
-    #chartlegendcontainer {
-        width: 100%;!important;
-        display: block;!important;
-    }
-}
 
 #chartlegend{
-overflow-y: auto;
-max-height:11em;
-padding: 5px;
-
+    overflow-y: auto;
+    width: 100%;
 }
 
-#chartlegendresizable .legendControls{
-    float:right;
+#chartlegendcontainer .legendControls{
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    max-width:15em;
 }
-#groupselector_box fieldset{
+#compare_selector_box fieldset{
     border: none;
     padding: 0;
 }
 
+#chartlegendcontainer .selectBase select{
+    max-width:30em;
+}
+
+
+#chartlegendcontainer .switch_url, #chartlegendcontainer .close_comparison {
+    display:inline-block;
+    width:26px;
+    height: 26px;
+    vertical-align: middle;
+    background-repeat: no-repeat;
+    background-position: center center;
+    opacity: .6;
+}
+
+#chartlegendcontainer .close_comparison {
+    background-image: url(../admin/file?file=/velocity/img/round_delete_icon.png&contentType=image/png);
+
+}
+#chartlegendcontainer .switch_url {
+    background-image: url(../admin/file?file=/velocity/img/switch.png&contentType=image/png);
+
+}
+
+#chartlegendcontainer .selectBase{
+    margin-left: 5px;
+}
+
+
+#group_selector_box{
+    display:none;
+    margin-left:5px;
+}
 #chartlegendresizable .extensionLink{
     display: block;
     font-style: italic;
@@ -1436,6 +1475,14 @@ font-style: italic;
 #chartlegend td{
     text-align: right;
 }
+#chartlegend td.auswahl{
+    text-align: left;
+    width:70%
+}
+#chartlegend td.nowrap{
+   white-space: nowrap;
+}
+
 
 #chartlegend  .tablesorter-default thead th {
     border-bottom: #ccc 2px solid;
@@ -1490,6 +1537,9 @@ color:#333;
 #download-form{
     display: none;
     margin: 0.1em;
+    position: absolute;
+    right: 4px;
+    bottom: 4px;
 }
 #download-form button{
     padding: 2px;
@@ -1597,6 +1647,11 @@ body .pure-button{
 }
 body .pure-button-primary, body .pure-button-selected, body a.pure-button-primary, body a.pure-button-selected{
     color: #fff;
+    font-weight: normal;
+}
+
+body .pure-button-primary, body a.pure-button-primary{
+    background-color: #344E6A;
 }
 body .pure-button img{
 	vertical-align: middle;
@@ -1623,7 +1678,8 @@ body .button-xlarge {
 body .pure-button-active,
 body .pure-button:active{
     color: #000000;
-    background-color: white;
+    background-color: #EEEEEE;
+    font-weight: bold;
 }
 /**
 body .ui-button .ui-button-text {

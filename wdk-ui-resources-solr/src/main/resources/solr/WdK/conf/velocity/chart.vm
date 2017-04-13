@@ -1,8 +1,6 @@
 
 
 
-
-
 #set($queryterms = $esc.url($params.get('q')))
 
 #if(!$queryterms || "$!queryterms" == "")
@@ -11,60 +9,114 @@
 
 
 ##http://localhost:8983/solr/WdK.dev/select?facet=true&facet.pivot={!stats%3Dp}goobi_PublicationYear%2Cgoobi_singleDigCollection&stats=true&stats.field={!tag%3Dp+mean%3Dtrue}topic_capitals_chapters_sentences_50_12&wt=xml&facet.limit=10000&rows=0
+
+#set($groupStats = false)
 #set($groupStatsField = $esc.url($params.get('group_stats_field')))
+#if($groupStatsField && $!groupStatsField != "")
+    #set($groupStats = true)
+#end
 
 #set($groupform = false)
+
+#macro(current_constraints_as_base)#foreach($p in $params_for_base_constraints_mapping.keySet())#foreach($v in $request.params.getParams($p))#if($v != '')&${params_for_base_constraints_mapping[$p]}=${esc.url("#removeTag($v)")}#end#end#end#end
+
+#macro(base_constraints_from_query)#foreach($p in $params_for_base_constraints_mapping.keySet())#foreach($v in $request.params.getParams( $params_for_base_constraints_mapping[$p]))#if($v != '')&$p=${esc.url("#removeTag($v)")}#end#end#end#end
 
 
 ##- include timefield
 ##
 
 #set($groupfield_stats_param = "&stats.field={!tag%3Dp+countDistinct=true}$groupfield")
-#set($withoutparams = ['q','s','rows', 'hl.q', 'group.field', 'group', 'group.ngroup', 'group.facet', 'facet.field', 'textfs', 'group.field'])
-
+#set($withoutparams = ['q','q.op', 'fq', 's','rows', 'hl.q', 'group.field', 'group', 'group.ngroup', 'group.facet', 'facet.field', 'textfs', 'group.field'])
 #set($success = $withoutparams.addAll($termfacets))
+#set($success = $withoutparams.addAll($params_for_base_constraints))
+
+
 #set($lensforstats="#lens_without_P($withoutparams)&q=${queryterms}#qop()&rows=0")
 
 
+
 ##exclude junkf-filter from corpus-base-query
-#set($activeFilter = "")
+#set($activeFilterForBase = "")
+
+
+#set($base_constraints_url_string = "#base_constraints_from_query()")
+
+#set($base_constraints = "#{base_constraints_from_query}()")
+#set($base_constraints = $base_constraints.trim())
+
 
 #if($params.getParams('fq'))
     #foreach($fq in $params.getParams('fq'))
+
+
+        #set($fq_without_tag = $esc.url("#{removeTag}($fq)"))
+
+        #set($lensforstats = "$lensforstats&fq=$fq_without_tag")
+
         #if($fq.contains($defaultfilter))
-            #set($activeFilter = "$activeFilter&fq=$esc.url($defaultfilter)")
+            #set($activeFilterForBase = "$activeFilterForBase&fq=$esc.url($defaultfilter)")
         #end
-        #if($fq.contains($timefacet))
-            #set($activeFilter = "$activeFilter&fq=$fq")
+            #if($fq.contains("$timefacet:"))
+                #set($activeFilterForBase = "$activeFilterForBase&fq=$fq_without_tag")
+                #if(! $base_constraints_url_string.contains("$timefacet:"))
+                    #set($base_constraints_url_string = "$base_constraints_url_string&fq=$fq_without_tag")
+                #end
+             #end
         #end
     #end
-#end
-
-#set($success = $withoutparams.add('fq'))
-#set($lensforscorpusstats="#lens_without_P($withoutparams)&q=*&rows=0$activeFilter")
 
 
-#macro(statsparams)&facet=true&stats=true&facet.pivot={!stats%3Dp}${timefacet}#if($groupStatsField && $groupStatsField != "")%2C${groupStatsField}&facet.pivot={!stats%3Dp}${groupStatsField}#end#end
 
-#macro(solrjson_pivot_stats_url_json)#{url_for_solr}/json$lensforstats#{statsparams}#end
+
+
+
+#set($base_query_active = $base_constraints.trim() != '')
+
+#set($lensforscorpusstats="#lens_without_P($withoutparams)&rows=0#if($base_query_active)$base_constraints_url_string.trim()#else${activeFilterForBase}#end")
+
+
+#set($switchparams = [])
+#set($success = $switchparams.addAll($params_for_base_constraints))
+#set($success = $switchparams.addAll($params_for_base_constraints_mapping.keySet()))
+#set($lensforswitch="#lens_without_P($switchparams)#base_constraints_from_query()#current_constraints_as_base()")
+
+
+#macro(statsparams)&facet=true&stats=true&facet.pivot={!stats%3Dp}${timefacet}#if($groupStats)%2C${groupStatsField}&facet.pivot={!stats%3Dp}${groupStatsField}#end#end
+
+#macro(solrjson_pivot_stats_url_json)#{url_for_solr}/json$lensforstats#{statsparams}()#end
 
 
 ##macro(solrjson_pivot_stats_url_json_old)#{url_for_solr}/json$lensforstats&wt=json&stats=true&facet.limit=10000&facet.pivot={!stats%3Dp}$timefacet#if($groupStatsField && $groupStatsField != "")%2C${groupStatsField}&facet.pivot={!stats%3Dp}${groupStatsField}#end#end
 
-#macro(solrjson_pivot_stats_corpus_url_json)#{url_for_solr}/json$lensforscorpusstats#{statsparams}#end
+#macro(solrjson_pivot_stats_corpus_url_json)#{url_for_solr}/json$lensforscorpusstats#{statsparams}()#end
 
 	## &facet.pivot={!stats%3Dp}Schultyp_Allg_wdk
 	## statsgroupfield uebergeben
 	## stats.field
 
+    #set($baseQuery = $params.get($params_for_base_constraints_mapping['q']))##
+    #set($baseQueryFqs = {})##
+    #calc_selected($params.getParams($params_for_base_constraints_mapping['fq']), $baseQueryFqs)##
+    #set($baseQueryOps = $params.get($params_for_base_constraints_mapping['q.op']).trim())##
+    #if(!$baseQueryOps || $!baseQueryOps == "")
+        #set($baseQueryOps = "AND")##
+    #end
+
+
+
+#set($withoutparams_group_comp = ["group_stats_field"])
+#set($success = $withoutparams_group_comp.addAll($params_for_base_constraints))
+
+
 
 <div id="chartbox">
 
 <script>
-        #set($currentSelection = "#displaycurrentselection()")
+
 
 var chart_conf = {
-	baseurl: '#solrjson_pivot_stats_corpus_url_json()',
+	baseurl: $esc.s#solrjson_pivot_stats_corpus_url_json()$esc.s,
 	currentselection_url : "#{url_for_solr}/browse$lensforstats",
     statsfield: [],
     statsfield_title: [],
@@ -73,13 +125,17 @@ var chart_conf = {
 	groupfield_title : false,
     top_groups_no: 10,
     norelativevalues: false,
-    no_timefield_url: $esc.s#lens_No_CurrentFQ($timefacet)$esc.s,
+    no_timefield_url: $esc.s#url_for_filters_no_current($timefacet)$esc.s,
     group_stats_field : "$groupfield",
     group_stats_field_title : $esc.s#displayfacetname($groupfield)$esc.s,
 	statsonquery : false,
-
-    info_currentselection: $esc.s$currentSelection.replaceAll(",", "")$esc.s,
-    info_currentselection_url: $esc.s#url_for_solr()/browse#lens()$esc.s,
+    current_query_for_time :    '#url_for_filters_no_current($timefacet)&v.template=browse_docs',
+    info_currentselection: $esc.s#displaycurrentselection()$esc.s,
+    info_baseselection: $esc.s#displayselection("$!baseQuery", $baseQueryFqs, $baseQueryOps)$esc.s,
+    info_currentselection_url:  $esc.s#url_for_solr()/browse#lens() $esc.s,
+    current_constraints_for_base: $esc.s#current_constraints_as_base()$esc.s,
+    base_url_for_new_base: $esc.s#{url_for_home}()#{lens_without_P}($withoutparams_group_comp)$esc.s,
+    switch_url: $esc.s#url_for_home()$lensforswitch$esc.s,
     info_core_version: '$core_version',
 
 	stats_color : "#C14D00"
@@ -91,15 +147,14 @@ var chart_conf = {
 ##set($solrjson_base_facet = "#{url_for_solr}/browse?q=*&wt=json&rows=0&facet=true&facet.field=goobi_PublicationYear&facet.limit=10000")
 ##var solrjson_base_facet = "$solrjson_base_facet";
 
-//current stats facet, as of know only goobi_PublicationYear is supported
-## create url for new window, with current fqs without facetfield - add to barcharts etc onclick function
+#if($base_query_active)
+    #set($pagesRelBut = "Anteil an Basisauswahl in %")
+    #set($pagesRelButTitle = "Anteil Trefferseiten (%) an allen Seiten in Basisauswahl f&uuml;r das jeweilige Jahr")
 
-
-#set($current_query_url = "#url_for_filters_no_current($timefacet)")
-
-//define base query used to select single years from the histogramm
-current_query_url = '${current_query_url}&v.template=browse_docs';
-#set($pagesRelBut = "% Treffer pro Jahr")
+#else
+    #set($pagesRelBut = "Anteil an Korpus in %")
+    #set($pagesRelButTitle = "Anteil Trefferseiten (%) an allen Seiten im Korpus  f&uuml;r das jeweilige Jahr")
+#end
 #set($relButton = true)
 
 #set($chartShowTopics = false)
@@ -114,7 +169,7 @@ current_query_url = '${current_query_url}&v.template=browse_docs';
 
 
 
-#if($groupStatsField && "$!groupStatsField" != "")
+#if($groupStats || $base_query_active)
 
     #if(($ct && "$!ct" != ""))
         #if( $ct != $noTopicParam  )
@@ -134,6 +189,10 @@ current_query_url = '${current_query_url}&v.template=browse_docs';
         #set($statstitle = "$statstitle.trim()")
         #set($statsfield = "'$ct'")
         #set($chartname = "Topic $statstitle nach $groupStatsField" )
+        #if($base_query_active)
+            #set($chartname = "Topic $statstitle in Anfrage relativ zu Basisauswahl" )
+        #end
+
 
     #end
 
@@ -153,18 +212,19 @@ current_query_url = '${current_query_url}&v.template=browse_docs';
 #end
 
 #if($chartShowTopics)
-chart_conf.currentselection_url = $esc.s#{solrjson_pivot_stats_url_json}${statsfieldurl}$esc.s;
+chart_conf.currentselection_url = $esc.s#{solrjson_pivot_stats_url_json}()${statsfieldurl}$esc.s;
 //set topicname for chart legend
 chart_conf.baseurl = $esc.s#solrjson_pivot_stats_corpus_url_json()${statsfieldurl}$esc.s,
 
-        chart_conf.statsfield = [$statsfield];
-    chart_conf.statsfield_title = [$esc.s$statstitle$esc.s];
+chart_conf.statsfield = [$statsfield];
+chart_conf.statsfield_title = [$esc.s$statstitle$esc.s];
 
     #set($chartname =  $statstitle)
 #else
 ## necessray with pivot-facet?
 topic1title = "";
-chart_conf.currentselection_url  = '#{solrjson_pivot_stats_url_json}';
+chart_conf.currentselection_url  = '#{solrjson_pivot_stats_url_json}()';
+
     #set($chartname = "Aktuelle Auwahl")
 
 #end
@@ -215,20 +275,22 @@ Stemming? Normalisierung?
 	#set($groupformtext = "Topic nach Kategorie")
 #elseif($relButton)
 
-#elseif($groupStatsField && $groupStatsField != "")
+#elseif($groupStats)
 
 #else
 	chart_conf.groupfield = false;
 	#set($groupform = false)
 #end
 
+#**
 #if($params.get('top_groups_no'))
     #set($top_groups_no = $esc.url($params.get('top_groups_no')))
 #else
     #set($top_groups_no = 10)
 #end
 chart_conf.top_groups_no =  $top_groups_no;
-    ##todo: Alle abhängigkeiten in solrvis-lg ausser von chart_conf entfernen
+**#
+
 jQuery(document).ready(function() {solrvis_lg_loadchart(chart_conf)});
 
 
@@ -238,7 +300,7 @@ jQuery(document).ready(function() {solrvis_lg_loadchart(chart_conf)});
     <h2  id="chartcontrols" class="collapse-button open">Diagramm f&uuml;r $chartname&nbsp;<img alt="statistik" src="#{url_for_solr}/admin/file?file=/velocity/img/stats.png&contentType=image/png"/></h2>
     <div id="chart" class="collapsible">
 
-        <form action="#{url_for_solr}/browse"  method="get">
+
       #** <pre>
 chartShowTopics ? $!chartShowTopics
 groupStatsField ? $!groupStatsField<br>
@@ -255,21 +317,10 @@ statsfield ? $statsfield
 
             #end</div>
 
-
-            ##Differenzieren: Topic gruppieren nach, filter/anfrage gruppieren nach
-
-                #q_form()
-                #fqs_form()
-
-                #additional_params_form_nops(["group_stats_field", "top_groups_no", "ct"])
-
-
-
-
         <div id="y1settings">
         #if($relButton)
-                      <input type="radio" id="PagesAbsBut" name="PagesAbsBut" checked="checked"><label for="PagesAbsBut">Absolut</label>
-                      <input type="radio" id="PagesRelBut" name="PagesRelBut"><label for="PagesRelBut">$pagesRelBut</label>
+                      <input type="radio" id="PagesAbsBut" name="PagesAbsBut" checked="checked"><label for="PagesAbsBut" title="Treffer pro Jahr">Absolut</label>
+                      <input type="radio" id="PagesRelBut" name="PagesRelBut"><label for="PagesRelBut" title="$pagesRelButTitle">$pagesRelBut</label>
         #end
         </div>
 
@@ -278,47 +329,76 @@ statsfield ? $statsfield
         <div id="chartcontainer"></div>
     </div>
 
-    <div id="chartlegendcontainer">
 
+    <div class="pure-g">
+        <div class="#{if}($showtopics.size()>0)pure-u-2-3#{else}pure-u-4-5#{end}">
+    <div id="chartlegendcontainer"  >
+        <div id="statscontrols">
+            <div class="pure-button-group" role="group" aria-label="Vergleichsoption f&uuml;r Diagramm ausw&auml;hlen">
+        <button id="show_group_field" class="pure-button pure-button-primary">Gruppenvergleich</button>
+        <button id="show_comp_field" class="pure-button pure-button-primary">Vergleich mit vorheriger Anfrage</button>
+            </div>
 
-        <div id="chartlegendresizable">
+        <div id="group_selector_box" class="pure-form">
+            <form action="#{url_for_solr}/browse"  method="get">
+                #q_form()
+                #fqs_form()
 
-            <div id="chartlegend">
-
-                <div id="groupselector_box">
-
+                #additional_params_form_nops($withoutparams_group_comp)
                 <fieldset>
-                    <label for="group_stats_field">Gruppenvergleich:</label>
+                    <label for="group_stats_field">Gruppe ausw&auml;hlen:</label>
                     <select name="group_stats_field" id="group_stats" onchange="this.form.submit()">
                         <option value=""/></option>
                         #foreach($field in $response.facetFields)
                             <option value="$field.name" #if($groupStatsField  == $field.name) selected #end>#displayfacetname($field.name)</option> ##todo: selected wenn group_stats_field
                         #end
                     </select>
-
+                #if($groupStats)
+                    <a href="#{url_for_home}()#{lens_without_P}($withoutparams_group_comp) title="schlie&szligen" class="close_comparison"></a>
+                #end
                 </fieldset>
-            </div>
+                </form>
+        </div>
+
+        </div>
+
+        <div class="chartTitleContainer"></div>
+        <div id="chartlegendresizable">
+
+
+            <div id="chartlegend">
+
             </div>
 
 
         </div>
-
-        <div class="topicbox">
-            #parse("topic_box.vm")
-        </div>
-
 
     </div>
-        </form>
-        <form id="download-form" method="post" target="_blank" action="$data_loopback_url">
-            <input type="button" class="pure-button button-xsmall" value="Zeitverlauf als CSV exportieren"/>
-        </form>
+        </div>
+
+            <div class="#{if}($showtopics.size()>0)pure-u-1-3#{else}pure-u-1-5#{end}">
+
+                #parse("topic_box.vm")
+
+            <form id="download-form" method="post" target="_blank" action="$data_loopback_url">
+                <input type="button" class="pure-button button-xsmall" value="Zeitverlauf als CSV exportieren"/>
+            </form>
+
+            </div>
+
+    </div>
 </div>
 
 </div>
 
 #macro(select_current_topic $ct)
-    #if($showtopics.size() > 0 && $groupStatsField && "$!groupStatsField" != "")
+    #if($showtopics.size() > 0 && ($groupStats || $base_query_active))
+        <form action="#{url_for_solr}/browse"  method="get">
+            #q_form()
+            #fqs_form()
+            #additional_params_form_nops(["ct"])
+
+
 
     <div id="select_current_topic" title="Anzuzeigendes Topic bei gruppierten Werten im Diagramm ausw&auml;hlen.">Anzeigen:&nbsp;
 
@@ -332,5 +412,8 @@ statsfield ? $statsfield
         #end
     </select>
     </div>
+        </form>
+
     #end
 #end
+

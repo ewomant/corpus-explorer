@@ -15,19 +15,12 @@
         <a class="mltDistributionLink" href="#url_for_home?q={!mlt+fl=$mlt_fl+mintf%3D1+mindf%3D1}${docId}&fq={!frange+l%3D$mlt_minScore}{!mlt+fl=$mlt_fl+mintf%3D1+mindf%3D1}$docId" target="_blank">Verteilung der Ergebnisse mit mindestens 10% des Score des Originaldokumentes</a>
     #end*#
 
-    <form action="#url_for_home"" method="get" class="pure-form numbermlt">
+    <form action="#url_for_home" method="get" class="pure-form numbermlt">
 
     #q_form()
+
     <input type="hidden" name="mlt" value="true"/>
 
-
-    #*
-    #foreach($fq in $request.params.getParams('fq'))
-        #if ($fq != "{!bbox}")
-            <input type="hidden" name="fq" id="allFQs" value="$esc.html($fq)"/>
-        #end
-
-    #end*#
 
     #additional_params_form_nops(['rows', 'q', 'rows', 'qf', 'mlt'])
 

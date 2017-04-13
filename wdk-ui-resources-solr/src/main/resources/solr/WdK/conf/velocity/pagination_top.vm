@@ -20,10 +20,7 @@
     #end
 
     #foreach($fq in $request.params.getParams('fq'))
-        #if ($fq != "{!bbox}")
-            <input type="hidden" name="fq" id="allFQs" value="$esc.html($fq)"/>
-        #end
-
+            <input type="hidden" name="fq" value="$esc.html($fq)"/>
     #end
         <label for="rows">Treffer pro Seite:</label>
     <input type="text" name="rows" size="2" value="$current_page_results_per_page"/>

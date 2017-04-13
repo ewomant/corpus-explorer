@@ -21,9 +21,13 @@
 
 #macro(qop)&#if($request.params.get('q.op') == 'AND' || $request.params.get('q.op')  == 'OR')&q.op=$!{esc.url($!request.params.get('q.op'))}#end#end
 
-#macro(qop_desc)#if($request.params.get('q.op') == 'OR')min. 1 Term#elseif($request.params.get('q.op') == 'AND')Alle Terme#end#end
+#macro(qop_desc $op)#if($op == 'OR')min. 1 Term#elseif($op == 'AND')Alle Terme#end#end
 
 #macro(fqs $p)#foreach($fq in $p)#if($velocityCount>1)&#{end}fq=$esc.url($fq)#end#end
+
+
+
+
 
 
 #macro(createFQ $field, $value)#createTag($field)#createFQ_noTag($field, $value)#end
@@ -371,16 +375,20 @@ $aFieldname.substring(1, $math.sub($aFieldname.length(),1)).replaceFirst("TO", "
 #end
 
 
-#macro(displaycurrentselection)##
-    #set($currentQuery = $params.getParams('q'))##
-#if($selected_filter_queries.size() > 0 || ($currentQuery.size() > 0 &&  $currentQuery[0] != ''))##
-#if($currentQuery.size() > 0 &&  $currentQuery[0] != '')##
-Anfrage (#qop_desc()):$currentQuery[0] #end##
-#foreach($field in $sort.sort($selected_filter_queries.keySet()))##
-#set($filter = $selected_filter_queries[$field])##
-#if(($velocityCount - $selected_topicfilters.size()) != 1)>#end##
-$filter['field_name'] >#end#end#end##
+#macro(displayselection $cQ $sfq $queryOp)##
+#if($sfq.size() > 0 ||   $!{cQ} != '')##
+#if($!{cQ} != '')##
+Anfrage (#qop_desc($queryOp)): $cQ #if($sfq.size() > 0),#end#end##
+#foreach($field in $sort.sort($sfq.keySet()))##
+#set($filter = $sfq[$field])##
+ $filter['field_name']#if($velocityHasNext), #end#end#end#end##
 
+
+
+#macro(displaycurrentselection)##
+    #set($currentQuery = $!params.get('q'))##
+    #displayselection("$!{currentQuery}", $selected_filter_queries, $qop)##
+    #end
 
 ##create query
 #macro(solrjson_stats_url)#{url_for_solr}()/browse#{lensNoQ}()&q=${queryterms}&rows=0&stats=true&stats.facet=${timefacet}#end

@@ -13,7 +13,7 @@
 
     #foreach($fq in $request.params.getParams('fq'))
       #if ($fq != "{!bbox}")
-        <input type="hidden" name="fq" id="allFQs" value="$esc.html($fq)"/>
+        <input type="hidden" name="fq" value="$esc.html($fq)"/>
       #end
     #end
 		<input type="hidden" name="wt" value="csv"/>
@@ -28,7 +28,7 @@
      #end
     #q_form()
 	#*filter accidental "big" documents
-	 <input type="hidden" name="fq" id="allFQs" value="ntokens:[50 TO 2500]"/>*#
+	 <input type="hidden" name="fq" value="ntokens:[50 TO 2500]"/>*#
 
 	#additional_params_form_nops(['rows','fl' ])
 

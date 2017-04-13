@@ -3,28 +3,39 @@
 
 #set($currentQuery = $params.getParams('q'))
 
+
+
 #if($selected_filter_queries.size() > 0 || ($currentQuery.size() > 0 &&  $currentQuery[0] != ''))
+
+    #set($selected_filter_queries_keys = $selected_filter_queries.keySet().toArray())
+
+
 <div class="constraints" #annTitle("Anfragen und Filter aufz&auml;hlen.  Klicken um zu entfernen")>
-    <a class="restart pure-button sl" href="#url_for_home#if($request.params.get('debugQuery'))?debugQuery=true#end">Auswahl aufheben</a>
+    #set($default_filter_only = ($selected_filter_queries.size() == 1 && $selected_filter_queries_keys[0] == $defaultfilter))
+    #if(!($default_filter_only))
+        <a class="restart pure-button sl"
+           href="#{url_for_home}#{lens_without_P}(['q', 'q.op', 'fq', 'base_fq', 'base_q','base_qop'])">
+            Auswahl zur&uuml;cksetzen</a>
+    #end
 
     <div class="qfqs">   <h2 >Aktuelle Auswahl:</h2>
 
-        #if($currentQuery.size() > 0 &&  $currentQuery[0] != '')
+        #if($currentQuery.size() > 0 &&  $!currentQuery[0] != '')
             <a style="{text-decoration: line-through;}"
-               href="#lensNoQ">Anfrage&nbsp;(#qop_desc()):&nbsp;$currentQuery[0]</a>
+               href="#lensNoQ">Anfrage&nbsp;(#qop_desc($qop)):&nbsp;$currentQuery[0]</a>
+            #if($selected_filter_queries.size() > 0)|#end
         #end
 
-            #foreach($field in $sort.sort($selected_filter_queries.keySet()))
-                #set($filter = $selected_filter_queries[$field])
-                #if(($velocityCount - $selected_topicfilters.size()) != 1)|#end##
-
-                #if($filter.type == "predefined" || $filter.type == "junkfilter")
-                    <a class="sl" href="#url_for_filters_no_current($filter['field'])">$filter['field_name']</a>
-                #else
-                    <a class="sl" href="#url_for_filters_no_current($field)">$filter['field_name']</a>
-                #end
-
+        #foreach($field in $sort.sort($selected_filter_queries_keys))
+            #set($filter = $selected_filter_queries[$field])
+            #if($filter.type == "predefined" || $filter.type == "junkfilter")
+                <a class="sl" href="#url_for_filters_no_current($filter['field'])#if($default_filter_only)&fq=#end">$filter['field_name']</a>
+            #else
+                <a class="sl" href="#url_for_filters_no_current($field)">$filter['field_name']</a>
             #end
+            #if($foreach.hasNext)|#end
+
+        #end
 
     </div>
 #end
