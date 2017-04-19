@@ -15,6 +15,7 @@
                 <li><a target="_blank" href="#{url_for_solr}/admin/file?file=/velocity/doc/LibreOffice_Basic_WdK_Export_As_Textfiles.txt&contentType=text/plain">LibreOffice-Macro,</a> mit dem die CSV-Dateien in einzelne Textdateien geteilt werden k&ouml;nnen</li>
                </ul> </li>
     </ul>
+    <p>Die Seite wurde getestet mit Mozilla Firefox und Google Chrome</p>
 
     <h2>Information zum Index: </h2>
     <p><em>Version:</em> $core_version</p>

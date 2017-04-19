@@ -1032,20 +1032,22 @@ padding: 5px 10px;
 
 #topic_selector_button{
     padding: .5em 1em;
-    margin-bottom: 1em;
+    margin-bottom: 0.5em;
     margin-right: 0.2em;
 }
 
 .deselect_all_topics{
     padding: .5em 1em;
-    margin-bottom: 1em;
+    margin-bottom: 0.5em;
     margin-right: 0.2em;
 
 }
 #select_current_topic{
     display: inline-block;
+
     padding-left: 20px;
     margin-bottom: 1em;
+    margin-right: 0.2em;
     background: no-repeat left 2px center url(../admin/file?file=/velocity/img/graph-icon.png&contentType=img/png);
 }
 #topic_selector .topic_selector_title{
@@ -1366,10 +1368,15 @@ text-align:left;
     position:relative;
 }
 
-.charttitle{
+#chartlegendcontainer .charttitle{
     margin-right: 15em;
 }
 
+#chartlegendcontainer .charttitle h1{
+    font-size: 1.2em;
+    margin: 0;
+    color: #333;
+}
 
 #chartlegendcontainer .topic_button{
 
@@ -1410,7 +1417,8 @@ text-align:left;
     position: absolute;
     bottom: 0;
     right: 0;
-    max-width:15em;
+    max-width:17em;
+    z-index:100;
 }
 #compare_selector_box fieldset{
     border: none;
@@ -1675,8 +1683,7 @@ body .button-xlarge {
     font-size: 125%;
 }
 
-body .pure-button-active,
-body .pure-button:active{
+body .pure-button-active{
     color: #000000;
     background-color: #EEEEEE;
     font-weight: bold;

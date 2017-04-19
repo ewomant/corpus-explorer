@@ -22,6 +22,8 @@ var fieldTitles = {};
 
 var fieldTitles_stats = {};
 var fieldTitles_base_stats = {};
+var fieldTitles_rel_stats = {};
+
 
 var fieldTitles_pivot_count_rel = {};
 var fieldTitles_pivot_count  = {};
@@ -30,11 +32,13 @@ var overallmean_topics = {};
 var overallmean_topics_totals = {};
 
 var slg = { ABS : "_abs",
-            COUNT_REL: "_count",
-            STATS: "_topic",
-            TOPIC_MEAN: "_tm",
-            TOPIC_MEAN_BASE: "_tmbase",
-            COUNT_DISTINCT: "_cd"};
+    COUNT_REL: "_rel",
+    ABS_BASE: "_absbase",
+    STATS: "_topic",
+    TOPIC_MEAN: "_tm",
+    TOPIC_MEAN_BASE: "_tmbase",
+    TOPIC_MEAN_REL: "_tmrel",
+    COUNT_DISTINCT: "_cd"};
 
 var lastSQId = 'localLastStatsQueries';
 
@@ -159,6 +163,8 @@ if (!Array.prototype.find) {
         if(show_relative_to_base){
              basetitle_short = "Basisauswahl";
              basetitle_short_gen = "in der " + basetitle_short;
+
+            saveStatsQuery(cs.constraints_current_base, cs.info_baseselection);
         }
 
 
@@ -176,6 +182,7 @@ if (!Array.prototype.find) {
 		return false;
 	}
      saveStatsQuery(cs.current_constraints_for_base, cs.info_currentselection);
+
 
 
 };
@@ -206,16 +213,11 @@ var initialize_settings = function(){
 
     toggleElementButton('#group_selector_box', "#show_group_field", show_groups);
 
-
-
-
     $("#show_group_field").click(function(event){
         show =  $("#group_selector_box").css('display')!= 'none' && !show_groups ? false : true ;
         toggleElementButton('#group_selector_box', "#show_group_field", show);
         //var showother = (show == false) && show_relative_to_base;
         toggleElementButton('#statscontrols .selectBase', "#show_comp_field", false);
-
-
     });
 
     $("#show_comp_field").click(function(event){
@@ -223,8 +225,6 @@ var initialize_settings = function(){
         toggleElementButton('#statscontrols .selectBase', "#show_comp_field", show);
         // var showother = (show == false) && show_groups;
         toggleElementButton('#group_selector_box', "#show_group_field", false);
-
-
     });
 
 
@@ -327,7 +327,7 @@ function loadChart(){
 
 
         totalsExtent = d3.extent(totalsPivot2, function(e){return e.fieldvalue});
-            totalsPivot2 = fillYears(totalsPivot2);
+
 
 
 
@@ -361,6 +361,15 @@ function loadChart(){
 
                         currentExtent =  d3.extent(main_jd, function(e){return e.fieldvalue});
 
+
+                        //console.log("main_jd before joinTotalsToMain");
+                        //console.log(main_jd);
+                        if(show_relative_to_base){
+                            //add years that are only in totals
+                            main_jd = joinTotalsToMain(main_jd, totalsPivot2, cs.statsfield);
+
+                        }
+                        totalsPivot2 = fillYears(totalsPivot2);
                         main_jd = fillYears(main_jd);
 
 
@@ -423,8 +432,8 @@ function parsePivotData(data, pivot1, pivot2, statsfield){
 	var totalsforpivot = false;
 	if(typeof(totals.facet_counts.facet_pivot[pivotname])=='object'){
 		totalsforpivot = totals.facet_counts.facet_pivot[pivotname];
-		console.log("totalsforpivot");
-		console.log(totalsforpivot);
+		//console.log("totalsforpivot");
+		//console.log(totalsforpivot);
 	}
 
 	if(typeof(data.facet_counts.facet_pivot[pivotname]) !== undefined && Array.isArray(data.facet_counts.facet_pivot[pivotname])){
@@ -463,10 +472,13 @@ function parsePivotData(data, pivot1, pivot2, statsfield){
                         }
 
                         row[statstopicid] = totalsforyear.stats.stats_fields[sf].mean;
+
                     });
                 }
-			}
-
+			}else{
+                row.count_rel =   1;
+                row.totals_year = 0;
+            }
 			if(parentData.stats){
 
                 //console.log(statsfield);
@@ -478,9 +490,29 @@ function parsePivotData(data, pivot1, pivot2, statsfield){
 
                     row[statstopicid] = parentData.stats.stats_fields[sf].mean;
                 });
+
                 //row.totals_year = row.count;
 				//row.mean_topic_stddev = parentData.stats.stats_fields[statsfieldname].stddev;
 			}
+
+            //add relstats
+            $.each(statsfield, function(i, sf) {
+
+                var reltopicid = createFieldId(sf, "") + slg.TOPIC_MEAN_REL;
+                var statstopicid = createFieldId(sf, "") + slg.TOPIC_MEAN;
+                var statstopicidbase = createFieldId(sf, "") + slg.TOPIC_MEAN_BASE;
+
+                row[statstopicid] = row[statstopicid] ? row[statstopicid] : 0;
+                row[statstopicidbase] = row[statstopicidbase] ? row[statstopicidbase] : 0;
+
+                if (!(reltopicid in fieldTitles_rel_stats)) {
+                    var topicname = topicnames[sf] ? topicnames[sf].name : sf ;
+                    fieldTitles_rel_stats[reltopicid] = "+/- %p &oslash;Topic-Intensit&auml;t relativ zu " + basetitle_short  +" f&uuml;r " + topicname;
+                }
+                row[reltopicid] = row[statstopicid] - row[statstopicidbase];
+            });
+
+
 
 			if(pivot2 && parentData.pivot){
 				//console.log(parentData.pivot);
@@ -539,7 +571,148 @@ function parsePivotData(data, pivot1, pivot2, statsfield){
 
 }
 
+/**
+ * //add years that are only in totals, not in main
+ * @param main
+ * @param totals
+ * @returns {Array}
+ */
 
+function joinTotalsToMain(main, totals, statsfield){
+    main.sort(sortYear);
+    totals.sort(sortYear);
+
+    var firstyear = Math.min(totalsExtent[0], currentExtent[0]);
+    var lastyear = Math.max(totalsExtent[1], currentExtent[1]);
+
+
+    var newMain = new Array();
+    var indexTotals = 0;
+    var indexMain = 0;
+
+    for ( var year = firstyear;
+          year <= lastyear;
+          year++) {
+
+        var row_totals = false;
+       // console.log(year);
+
+        if(totals[indexTotals] && totals[indexTotals]['fieldvalue'] == year ) {
+            row_totals = totals[indexTotals];
+            //console.log("totals is set");
+            indexTotals++;
+
+        }
+
+        if(main[indexMain] && main[indexMain]['fieldvalue'] == year  ){
+            //start from main
+            var row = main[indexMain];
+            //console.log("main is set");
+           // console.log(row);
+
+            indexMain++;
+
+        }else{
+
+
+            //only totals present, set relative values to zero
+            var row = {'fieldvalue': year};
+            if(row_totals ){
+                //console.log(row_totals);
+                row.field = row_totals.field;
+                row.fieldid = createFieldId(cs.timefield, year);
+                //console.log("only totals is set");
+                row.totals_year = row_totals.count;
+                row.count_rel = 0; //none in main, so zero divided by xy
+                row.count = 0;
+
+
+
+                $.each(statsfield, function(i, sf){
+                    var topicid = createFieldId(sf, "") ;
+                    var statstopicid = topicid + slg.TOPIC_MEAN;
+                    var reltopicid = topicid + slg.TOPIC_MEAN_REL;
+                    var basetopicid = topicid + slg.TOPIC_MEAN_BASE;
+                    var topicname = topicnames[sf] ? topicnames[sf].name : sf ;
+
+                    if(!(basetopicid in fieldTitles_base_stats)){
+                        fieldTitles_base_stats[basetopicid] = topicname + " " + basetitle_short_gen;
+                    }
+                    row[basetopicid] = row_totals[statstopicid];
+
+                    if(!(reltopicid in fieldTitles_rel_stats)){
+                        fieldTitles_rel_stats[reltopicid] = topicname + " " + basetitle_short_gen;
+                    }
+                    row[reltopicid] = 0 - row_totals[statstopicid];
+                });
+                //console.log(row);
+            }else{
+              //  console.log("nothing is set");
+            }
+
+
+        }
+
+
+/**
+            //remove idending, add correspondant id ending
+            //add to fieldlabels_total
+            Object.keys(row_totals).forEach(function (key) {
+                if(key.endsWith(slg.TOPIC_MEAN)){
+                    if( !row[key]){
+                        row[key] = 0;
+                    }
+                    var topicKey = key.replace(slg.TOPIC_MEAN, "");
+                    var newKey = key.replace(slg.TOPIC_MEAN, slg.TOPIC_MEAN_BASE);
+                    if(!(newKey in fieldTitles_base_stats)){
+                        var topicname = topicnames[topicKey] ? topicnames[topicKey].name : topicKey ;
+                        fieldTitles_base_stats[newKey] = topicname + " " + basetitle_short_gen;
+                    }
+                    row[newKey] = row_totals[key];
+                }else if(key.endsWith(slg.ABS)){
+                    if( !row[key]){
+                        row[key] = 0;
+                    }
+
+                    var newKey = key.replace(slg.ABS, slg.ABS_BASE);
+
+                    row[newKey] = row_totals[key];
+                }
+            });
+
+        }else{
+            row.totals_year = 0;
+        }
+
+        row.count_rel =   row.count /  row.totals_year;
+
+        Object.keys(row).forEach(function (key) {
+            if(key.endsWith(slg.TOPIC_MEAN)){
+                var topicKey = key.replace(slg.TOPIC_MEAN, "");
+                var baseKey = key.replace(slg.TOPIC_MEAN, slg.TOPIC_MEAN_BASE);
+                var newKey = key.replace(slg.TOPIC_MEAN, slg.TOPIC_MEAN_REL);
+                if(!(newKey in fieldTitles_rel_stats)){
+                    var topicname = topicnames[topicKey] ? topicnames[topicKey].name : topicKey ;
+                    fieldTitles_rel_stats[newKey] = topicname + " +/- relativ zu " + basetitle_short;
+                }
+                row[newKey] =  value_or_0(row[key]) - value_or_0(row[baseKey]) ;
+            }else if(key.endsWith(slg.ABS)){
+                var newKey = key.replace(slg.ABS, slg.COUNT_REL);
+                var baseKey = key.replace(slg.ABS, slg.ABS_BASE);
+
+                if (!(newKey in fieldTitles_pivot_count_rel)) {
+                    fieldTitles_pivot_count_rel[newKey] = fieldTitles_pivot_count[key];
+                }
+                row[newKey] = row[key] / row[baseKey];
+
+            }
+        });
+            **/
+        newMain.push(row);
+    }
+    return newMain;
+
+}
 function fillYears(array){
 
 	var pivotsAvg = {};
@@ -582,6 +755,7 @@ function smoothData(array){
 
         keys = d3.keys(fieldTitles_stats);
         keys = keys.concat(d3.keys(fieldTitles_base_stats));
+        keys = keys.concat(d3.keys(fieldTitles_rel_stats));
         //keys.unshift('mean_topic');
     }else if(show_groups){
         keys = d3.keys(fieldTitles_pivot_count_rel);
@@ -658,27 +832,33 @@ function drawChart(){
         keys.push('count');
         if(show_relative_to_base){
             keys.push('totals_year');
+            if(show_stats){
+                fieldTitles = $.extend(fieldTitles, fieldTitles_base_stats );
 
+                keys = keys.concat(d3.keys(fieldTitles_base_stats));
+            }
         }
         var addFieldTitlesCount = fieldTitles_pivot_count;
 
     }else{
         var addFieldTitlesCount = fieldTitles_pivot_count_rel;
         keys.push('count_rel');
+        if( show_stats){
+                fieldTitles = $.extend(fieldTitles, fieldTitles_rel_stats );
+                keys = keys.concat(d3.keys(fieldTitles_rel_stats));
+        }
     }
 
 
-    if(show_stats && !show_groups){
+    if(show_stats && !show_groups && !(!show_absolute && show_relative_to_base)){
             fieldTitles = $.extend(fieldTitles, fieldTitles_stats );
 
 
             keys = keys.concat(d3.keys(fieldTitles_stats));
     }
-    if(show_relative_to_base && show_stats){
-        fieldTitles = $.extend(fieldTitles, fieldTitles_base_stats );
 
-        keys = keys.concat(d3.keys(fieldTitles_base_stats));
-    }
+
+
     if(show_groups){
             if(show_stats){
                 fieldTitles = $.extend(fieldTitles, fieldTitles_stats);
@@ -762,8 +942,8 @@ c3chartsettings = {
                         tick:{
                                 format:  pf
                             },
-                        label: "Topic-Intensität",
-                        min: 0,
+                        label: (show_relative_to_base && !show_absolute) ? "Topic-Intensität (+/- %p)" :  "Topic-Intensität",
+                        min: (show_relative_to_base && !show_absolute) ? undefined : 0,
                         padding: {
                             top: 0,
                             bottom: 0
@@ -787,6 +967,14 @@ c3chartsettings = {
                 }
 
          },
+    grid: {
+        y: {
+            lines: [
+                {value: 0,  axis: 'y'},
+
+            ]
+        }
+    },
     legend:{
         show: false
     },zoom: {
@@ -818,7 +1006,7 @@ c3chartsettings = {
 
         }
 
-    if(show_relative_to_base &&  show_stats){
+    if(show_relative_to_base &&  show_stats && show_absolute){
         for (key in fieldTitles_base_stats){
             c3chartsettings.data.colors[key] = 'red';
         }
@@ -907,18 +1095,22 @@ function createTabularLegend(chart, keys, fieldTitles) {
         var selectBase = selectBaseDiv.insert('select').on("change", reloadNewBase).attr('id', "selectBaseSelect");
         //selectBaseDiv.insert('p').html(cs.info_baseselection);
 
+
+    console.log(lastStatsQueries);
+
         var baseOptions = selectBase.selectAll('option')
             .data(lastStatsQueries)
             .enter()
             .append('option')
             .text(function (e, i) {
-                return e.desc;
+                return typeof e.desc != "undefined" ? e.desc : "";
             })
             .attr('value', function (e, i) {
-                return e.ur;
+                return typeof e.url != "undefined" ? e.url : "";
             })
             .property("selected", function (e) {
-                return e.desc.trim() == cs.info_baseselection.trim();
+                var desc = typeof e.desc != "undefined" ? e.desc : "";
+                return desc.trim() == cs.info_baseselection.trim();
             });
         if(show_relative_to_base){
             selectBaseDiv.insert('a')
@@ -996,12 +1188,15 @@ function createTabularLegend(chart, keys, fieldTitles) {
 
 
     //select all keys except count
-    console.log(keys);
+    //console.log(keys);
     var keysData = keys.slice(1);
     if(show_relative_to_base && !show_stats){
         keysData = [show_absolute ? "count" : "count_rel", "totals_year"]
-    }else if(show_relative_to_base){
+    }else if(show_relative_to_base && show_stats && show_absolute){
         keysData = keys.slice(2);
+    }else if(show_relative_to_base && show_stats && !show_absolute){
+        console.log(keys);
+        keysData = keys.slice(1);
     }
     //console.log(keysData);
     if (keysData.length > 2){
@@ -1012,12 +1207,13 @@ function createTabularLegend(chart, keys, fieldTitles) {
 
         legendControls.insert('button').classed('pure-button button-small', true).text("Alle verstecken")
             .on('click', function () {
-                d3.event.preventDefault();
+                //d3.event.preventDefault();
+                console.log("hideShowLegendFields(keysData, false);");
                 hideShowLegendFields(keysData, false);
             });
         legendControls.insert('button').classed('pure-button button-small', true).text("Alle anzeigen")
             .on('click', function () {
-                d3.event.preventDefault();
+                console.log("hideShowLegendFields(keysData, true);");
                 hideShowLegendFields(keys, true);
             });
     }
@@ -1047,10 +1243,20 @@ function createTabularLegend(chart, keys, fieldTitles) {
 
 
     // recreate topic_id by removing slg.STATS from key topicnames[sf]
+    /**
+     *
+     * Zeitverlauf aktuelle Auswahl
+     * Zeitverlauf aktuelle Auswahl relativ zu Basisauswahl
+     * Zeitverlauf aktuelle Auswahl relativ zu Basisauswahl mit Topic
+     * Zeitverlauf Gruppenvergleich
+     * Zeitverlauf Gruppenvergleich mit Topic
+     * Zeitverlauf Topicvergleich
 
-    if(show_relative_to_base && show_stats) {
 
-        //chartTitle.append('p').html(basetitle_short + ": " + cs.info_baseselection);
+     */
+    if(show_relative_to_base && show_stats && show_absolute) {
+
+        chartTitle.insert('h1', ':first-child').html("Zeitverlauf: Aktuelle Auswahl relativ zu Basisauswahl mit Topic");
 
         thr.insert('th').text('Topic');
         thr.insert('th').html('&oslash;Topic-Intensit&auml;t');
@@ -1059,7 +1265,7 @@ function createTabularLegend(chart, keys, fieldTitles) {
         thr.insert('th').html('Zeitraum');
         thr.insert('th').text('Auswahl');
 
-        rowsData.data(keysData).each(function(id) {
+        rowsData.data(keysData).each(function (id) {
             console.log(id);
             var tr = d3.select(this);
 
@@ -1071,27 +1277,58 @@ function createTabularLegend(chart, keys, fieldTitles) {
                     var title = fieldTitles[id];
                     insertLegendField(id, this, title);
                 });
-            if(id.endsWith(slg.TOPIC_MEAN)){
-                tr.append('td').text(  pf(overallmean_topics[id]));
+            if (id.endsWith(slg.TOPIC_MEAN)) {
+                tr.append('td').text(pf(overallmean_topics[id]));
                 tr.append('td').text(currentNumFound);
-                tr.append('td').text(pf(currentNumFound/totalsNumFound));
-                tr.append('td').html(currentExtent[0] + "&#8209;" + currentExtent[1] );
+                tr.append('td').text(pf(currentNumFound / totalsNumFound));
+                tr.append('td').html(currentExtent[0] + "&#8209;" + currentExtent[1]);
 
                 tr.append('td').text(cs.info_currentselection);
 
-            }else if(id.endsWith(slg.TOPIC_MEAN_BASE)){
-                var id_tm = id.replace(slg.TOPIC_MEAN_BASE, "") + slg.TOPIC_MEAN ;
-                tr.append('td').text( pf(overallmean_topics_totals[id_tm]));
+            } else if (id.endsWith(slg.TOPIC_MEAN_BASE)) {
+                var id_tm = id.replace(slg.TOPIC_MEAN_BASE, "") + slg.TOPIC_MEAN;
+                tr.append('td').text(pf(overallmean_topics_totals[id_tm]));
                 tr.append('td').text(totalsNumFound);
                 tr.append('td').text("");
-                tr.append('td').html(totalsExtent[0] + "&#8209;" + totalsExtent[1] );
+                tr.append('td').html(totalsExtent[0] + "&#8209;" + totalsExtent[1]);
                 tr.append('td').text(cs.info_baseselection)
 
             }
 
         });
+    }else   if(show_relative_to_base && show_stats && !show_absolute) {
+        chartTitle.insert('h1', ':first-child').html("Zeitverlauf: Aktuelle Auswahl relativ zu Basisauswahl mit Topic");
+        thr.insert('th').text('Topic');
+        thr.insert('th').html('&oslash;Topic-Intensit&auml;t (+/- Prozentpunkte)');
+        thr.insert('th').html('&oslash;Topic-Intensit&auml;t Auswahl');
+        thr.insert('th').html('&oslash;Topic-Intensit&auml;t Basisauswahl');
 
+
+
+        rowsData.data(keysData).each(function (id) {
+            console.log(id);
+            var tr = d3.select(this);
+
+            tr.append('th')
+                .attr('style', 'min-width:10em;')
+                .each(function (id) {
+                    var id_tm = id.replace(slg.TOPIC_MEAN_REL, slg.TOPIC_MEAN);
+
+                    var title = fieldTitles[id];
+                    insertLegendField(id, this, title);
+                    console.log(overallmean_topics);
+
+                    tr.append('td').text(pfs(overallmean_topics[id_tm] - overallmean_topics_totals[id_tm]));
+                    tr.append('td').text(pf(overallmean_topics[id_tm]));
+                    tr.append('td').text(pf(overallmean_topics_totals[id_tm]));
+
+
+                });
+
+
+        });
     }else if(show_relative_to_base) {
+        chartTitle.insert('h1', ':first-child').html("Zeitverlauf: Aktuelle Auswahl relativ zu Basisauswahl");
 
         //chartTitle.append('p').html(basetitle_short + ": " + cs.info_baseselection);
 
@@ -1143,6 +1380,7 @@ function createTabularLegend(chart, keys, fieldTitles) {
         });
 
     }else if (show_stats && !show_groups){
+        chartTitle.insert('h1', ':first-child').html("Zeitverlauf: Topics in aktueller Auswahl");
 
         thr.insert('th').text('Topic');
         thr.insert('th').html('&oslash;Topic-Intensit&auml;t');
@@ -1181,6 +1419,8 @@ function createTabularLegend(chart, keys, fieldTitles) {
         });
 
     }else if(show_groups && !show_stats ){
+        chartTitle.insert('h1', ':first-child').html("Zeitverlauf: Gruppenvergleich");
+
         var datawidth = pf((60/(4*100)));
 
         thr.insert('th').text('Gruppe');
@@ -1239,7 +1479,7 @@ function createTabularLegend(chart, keys, fieldTitles) {
 
 
     }else if(show_groups && show_stats ){
-
+        chartTitle.insert('h1', ':first-child').html("Zeitverlauf: Topic im Gruppenvergleich");
 
         chartTitle.append('div').html(
              pf(overallmean_topics[cs.statsfield[0]+slg.TOPIC_MEAN])
@@ -1498,10 +1738,6 @@ function getTopTitles(secondlevel_jd, topno){
         var valuetype = show_absolute ? slg.ABS : slg.COUNT_REL;
     }
 
-
-
-
-
     var topGroups = secondlevel_jd.sort(function(a, b){ return d3.descending(a[valuelabel], b[valuelabel]);});
     topGroups = topGroups.slice(0, topno).map(function(e){return e.fieldid + valuetype});
 
@@ -1566,7 +1802,7 @@ var solrvis_getTooltipContent = function (d, defaultTitleFormat, defaultValueFor
 
             if (! text) {
                 title = titleFormat ? titleFormat(d[i].x) : d[i].x;
-                text = "<table class='" + CLASS.tooltip + "'>" + "<tr><th colspan='2'>" + title + " (" + row.totals_year + " Seiten)";
+                text = "<table class='" + CLASS.tooltip + "'>" + "<tr><th colspan='2'>" + title;
                 text += "</th></tr>";
 
                 if(row.count && row.count_rel){
@@ -1586,7 +1822,7 @@ var solrvis_getTooltipContent = function (d, defaultTitleFormat, defaultValueFor
                     count = pf(row.count_rel);
                     text += rowformat( "% Treffer pro Jahr", count, CLASS.tooltipContainer, color('count'));
                 }
-                if(show_relative_to_base && row.totals_year){
+                if(row.totals_year){
                     text += rowformat( "Treffer " + basetitle_short_gen, row.totals_year, CLASS.tooltipContainer, color('totals_year'));
                 }
             }
@@ -1605,21 +1841,26 @@ var solrvis_getTooltipContent = function (d, defaultTitleFormat, defaultValueFor
                     abs_count = mv;
                 }
 
-
-                if(grouptype === slg.TOPIC_MEAN){
-                    text += rowformat( fieldTitles[d[i].id], value, CLASS.tooltipContainer, bgcolor);
-                }else if(grouptype === slg.STATS){
-                    text += rowformat( fieldTitles[d[i].id], value, CLASS.tooltipContainer, bgcolor);
-                }
-                else if(grouptype === slg.TOPIC_MEAN_BASE){
-                    text += rowformat( fieldTitles[d[i].id], value, CLASS.tooltipContainer, bgcolor);
-                }else if(grouptype === slg.COUNT_REL){
-                    text += rowformat( fieldTitles[d[i].id], value + " ("+ abs_count +")", CLASS.tooltipContainer, bgcolor);
-                }else if(grouptype === slg.ABS){
-                    var rel_count =  pf(row[group + slg.COUNT_REL]);
-                    text += rowformat( fieldTitles[d[i].id], abs_count + " ("+ rel_count +")", CLASS.tooltipContainer, bgcolor);
-                }else{
-                    text += rowformat(  groupid + " (" + typeof(value) + " - Unbekanntes Format): " +fieldTitles[d[i].id], value, CLASS.tooltipContainer, bgcolor);
+                switch(grouptype){
+                   case slg.TOPIC_MEAN:
+                   case slg.STATS:
+                   case slg.TOPIC_MEAN_BASE:
+                       text += rowformat( fieldTitles[d[i].id], value, CLASS.tooltipContainer, bgcolor);
+                        break;
+                    case slg.TOPIC_MEAN_REL:
+                        if(show_relative_to_base || (show_stats && !show_groups)){
+                            text += rowformat( truncateString(fieldTitles[d[i].id], 130), pfs(d[i].value), CLASS.tooltipContainer, bgcolor);
+                        }
+                        break;
+                    case slg.COUNT_REL:
+                        text += rowformat( fieldTitles[d[i].id], value + " ("+ abs_count +")", CLASS.tooltipContainer, bgcolor);
+                        break;
+                    case slg.ABS:
+                        var rel_count =  pf(row[group + slg.COUNT_REL]);
+                        text += rowformat( fieldTitles[d[i].id], abs_count + " ("+ rel_count +")", CLASS.tooltipContainer, bgcolor);
+                        break;
+                    default:
+                        text += rowformat( fieldTitles[d[i].id], value, CLASS.tooltipContainer, bgcolor);
 
                 }
             }
@@ -1812,7 +2053,7 @@ function convertChartToCsv() {
     if(show_relative_to_base){
         csvArray.push("\n" + basetitle_short + "," + cs.info_baseselection);
     }
-    csvArray.push("URL," +cs.info_currentselection_url);
+    csvArray.push("Aktuelle Auswahl URL," +cs.info_currentselection_url);
     csvArray.push("Indexversion," +cs.info_core_version);
     //d3.select("#chartbox").append("textarea").text(csvArray.join("\n")).attr("style", "width:100%;min-height:20em;");
     return csvArray.join("\n");
@@ -1832,7 +2073,9 @@ function  saveStatsQuery(url, desc){
     if(localStorage[lastSQId]){
        var lastStatsQueries = JSON.parse(localStorage[lastSQId]);
         /*remove by desc if present*/
-        lastStatsQueries = jQuery.grep(lastStatsQueries, function(e, i){return e.desc !== desc;});
+        lastStatsQueries = jQuery.grep(lastStatsQueries, function(e, i){
+            var thisdesc = typeof e.desc != "undefined" ? e.desc : "";
+            return thisdesc.trim() !== desc.trim();});
          /*(re-)add as first parameter*/
         lastStatsQueries.unshift(newEntry);
     }else{
@@ -1840,7 +2083,7 @@ function  saveStatsQuery(url, desc){
 
     }
     //
-    localStorage[lastSQId] = JSON.stringify(lastStatsQueries.slice(0,9));
+    localStorage[lastSQId] = JSON.stringify(lastStatsQueries.slice(0,15));
 }
 
 function  retrieveStatsQueries(){

@@ -46,17 +46,15 @@
 #set($base_constraints = $base_constraints.trim())
 
 
-#if($params.getParams('fq'))
-    #foreach($fq in $params.getParams('fq'))
+    #if($params.getParams('fq'))
+        #foreach($fq in $params.getParams('fq'))
+            #set($fq_without_tag = $esc.url("#{removeTag}($fq)"))
 
+            #set($lensforstats = "$lensforstats&fq=$fq_without_tag")
 
-        #set($fq_without_tag = $esc.url("#{removeTag}($fq)"))
-
-        #set($lensforstats = "$lensforstats&fq=$fq_without_tag")
-
-        #if($fq.contains($defaultfilter))
-            #set($activeFilterForBase = "$activeFilterForBase&fq=$esc.url($defaultfilter)")
-        #end
+            #if($fq.contains($defaultfilter))
+                #set($activeFilterForBase = "$activeFilterForBase&fq=$esc.url($defaultfilter)")
+            #end
             #if($fq.contains("$timefacet:"))
                 #set($activeFilterForBase = "$activeFilterForBase&fq=$fq_without_tag")
                 #if(! $base_constraints_url_string.contains("$timefacet:"))
@@ -105,10 +103,17 @@
 
 
 
+
 #set($withoutparams_group_comp = ["group_stats_field"])
 #set($success = $withoutparams_group_comp.addAll($params_for_base_constraints))
 
-
+#set($constraints_current_base = "")
+#foreach($param in $params_for_base_constraints)
+    #set($paramvalue = $params.getParams($param) )
+    #foreach($paramvalue in $paramvalue)
+        #set($constraints_current_base = "$constraints_current_base&$param=$paramvalue")
+    #end
+#end
 
 <div id="chartbox">
 
@@ -132,7 +137,8 @@ var chart_conf = {
     current_query_for_time :    '#url_for_filters_no_current($timefacet)&v.template=browse_docs',
     info_currentselection: $esc.s#displaycurrentselection()$esc.s,
     info_baseselection: $esc.s#displayselection("$!baseQuery", $baseQueryFqs, $baseQueryOps)$esc.s,
-    info_currentselection_url:  $esc.s#url_for_solr()/browse#lens() $esc.s,
+    constraints_current_base : $esc.s$constraints_current_base$esc.s,
+    info_currentselection_url:  $esc.s#url_for_solr()/browse#lens()$esc.s,
     current_constraints_for_base: $esc.s#current_constraints_as_base()$esc.s,
     base_url_for_new_base: $esc.s#{url_for_home}()#{lens_without_P}($withoutparams_group_comp)$esc.s,
     switch_url: $esc.s#url_for_home()$lensforswitch$esc.s,
@@ -400,7 +406,7 @@ statsfield ? $statsfield
 
 
 
-    <div id="select_current_topic" title="Anzuzeigendes Topic bei gruppierten Werten im Diagramm ausw&auml;hlen.">Anzeigen:&nbsp;
+    <div id="select_current_topic" class="pure-form" title="Anzuzeigendes Topic bei gruppierten Werten im Diagramm ausw&auml;hlen.">Anzeigen:&nbsp;
 
     <select name="ct" id="group_stats_value" onchange="this.form.submit()">
 
