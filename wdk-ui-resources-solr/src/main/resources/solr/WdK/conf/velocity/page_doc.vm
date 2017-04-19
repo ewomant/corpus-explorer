@@ -153,9 +153,9 @@
 
 ###Render Title
 #if($render == "books_grouped")##grouped by book
- 	#set($lensnogds = "#lens_without_P(['group','queryOpts','group.field','group.ngroups', 'document', 'sort'])")
+ 	#set($lensnogds = "#lens_without_P(['group','queryOpts','group.field','group.facet','group.ngroups', 'document', 'sort'])")
 	#set($sortpages = "&sort=page+asc")
-	<span class="docpage">$countdocs.</span>&nbsp;<a title="Ergebnisse aus diesem Werk in neuem Fenster" href="#url_for_home$lensnog&fq=document:$document_id&v.template=browse_docs$sortpages" target="_blank"><em>$group.doclist.numFound Seiten </em> <a/> in:
+	<span class="docpage">$countdocs.</span>&nbsp;<a title="Ergebnisse aus diesem Werk in neuem Fenster" href="#url_for_home$lensnogds&fq=document:$document_id&v.template=browse_docs$sortpages" target="_blank"><em>$group.doclist.numFound Seiten </em> <a/> in:
 	<h2>
 	  <a title="Alle Seiten dieses Werkes in neuem Fenster" href="#url_for_home?fq=document:$document_id&v.template=browse_docs&sort=page+asc&facet=false" target="_blank">$booktitle</a>  <a title="Werk als zus&auml;tzlicher Filter" href="#url_for_home#{lens_No_CurrentFQ}("document:$document_id")&fq=document:$document_id"><img src="#{url_for_solr}/admin/file?file=/velocity/img/filter_icon.png&contentType=image/png" alt=""/></a>
 	</h2>
