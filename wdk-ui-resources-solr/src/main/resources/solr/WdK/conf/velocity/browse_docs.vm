@@ -16,7 +16,11 @@
 
 #set($bookonly = false)
 <div id="browse_docs">
-#set($mltOn = $params.getBool('mlt'))
+
+    #set($lensnotemplate = "#lens_without_P(['v.template'])")
+    <a href="#url_for_home$lensnotemplate" target="_top">Anfrage in Hauptansicht &ouml;ffnen</a>
+
+    #set($mltOn = $params.getBool('mlt'))
 
 #if($mltOn == true)
     <h2>&Auml;nliche Dokumente zu folgendem Trefferdokument</h2>
